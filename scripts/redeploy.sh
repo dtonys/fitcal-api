@@ -1,6 +1,7 @@
 #!/bin/sh
-cd ~/webapps/node-api-boilerplate
+cd ~/webapps/fitcal-api
 git pull origin master
 yarn
 npm run build
-forever restart node-api
+forever restart fitcal-api
+
