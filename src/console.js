@@ -17,12 +17,16 @@ async function reloadRepl( replServer, setupMongoose ) {
   await replServer.context.mongoose.disconnect();
   await setupMongoose( process.env.MONGODB_DATABASE_NAME );
 
+  // reload mongo
   replServer.context.mongoose = requireUncached('mongoose');
   replServer.context.db = replServer.context.mongoose.connection;
   Object.keys(replServer.context.db.models).forEach(( modelName ) => {
     replServer.context[modelName] = replServer.context.db.models[modelName];
   });
 
+  // reload mailer
+  replServer.context.mailer = requireUncached( path.join(__dirname, 'email/mailer') );
+  replServer.context.mailer.initialize();
   console.log('Done'); // eslint-disable-line no-console
 }
 
@@ -33,10 +37,12 @@ async function bootstrap() {
   });
 
   // NOTE: Require env dependent files after envs are set
+  const mailer = require('email/mailer');
   const { setupMongoose } = require('setup/mongodb');
 
   // setup mongodb
   await setupMongoose( process.env.MONGODB_DATABASE_NAME );
+  mailer.initialize();
 
   const db = mongoose.connection;
   const replServer = repl.start({
@@ -45,6 +51,7 @@ async function bootstrap() {
 
   // Expose mongoose to the repl to make queries
   replServer.context.mongoose = mongoose;
+  replServer.context.mailer = mailer;
   Object.keys(db.models).forEach(( modelName ) => {
     replServer.context[modelName] = db.models[modelName];
   });

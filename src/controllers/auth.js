@@ -9,7 +9,7 @@ import {
   SESSION_COOKIE_NAME,
 } from 'models/session';
 import { handleAsyncError } from 'helpers/express';
-
+import * as mailer from 'email/mailer';
 
 export const signup = handleAsyncError( async ( req, res ) => {
   const {
@@ -46,6 +46,8 @@ export const signup = handleAsyncError( async ( req, res ) => {
 
   // log user in
   await createSessionWithCookie(user._id.toString(), res);
+  // Send verification email
+  mailer.signupWelcomEmail( email );
 
   // return user
   res.json({
@@ -113,7 +115,7 @@ export const logout = handleAsyncError( async ( req, res ) => {
   });
 });
 
-export const session = handleAsyncError( async ( req, res ) => {
+export const sessionInfo = handleAsyncError( async ( req, res ) => {
   const sessionId = req.cookies[SESSION_COOKIE_NAME];
   if ( !sessionId ) {
     res.json({
@@ -136,4 +138,28 @@ export const session = handleAsyncError( async ( req, res ) => {
       currentSession,
     },
   });
+});
+
+export const verifyEmail = handleAsyncError( async ( req, res ) => {
+  const { sessionToken } = req.query;
+  const decodedSessionToken = sessionToken.replace(/ /g, '+');
+  const {
+    currentUser,
+    currentSession,
+  } = await getCurrentSessionAndUser( decodedSessionToken );
+  if ( !currentUser || !currentSession ) {
+    console.log('User not found or invalid session');
+    res.redirect(process.env.WEB_SERVER_BASE + '/');
+    return;
+  }
+  // set user as verified
+  currentUser.set({ is_email_verified: true });
+  await currentUser.save();
+  // destroy the session
+  await currentSession.remove();
+
+  // log user in
+  await createSessionWithCookie( currentUser._id.toString(), res );
+  // redirect to home page
+  res.redirect(process.env.WEB_SERVER_BASE + '/');
 });

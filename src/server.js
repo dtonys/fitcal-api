@@ -9,11 +9,14 @@ async function bootstrap() {
   });
 
   // NOTE: Require env dependent files after envs are set
+  const mailer = require('email/mailer');
   const { createExpressApp, startExpressServer } = require('setup/express');
   const { setupMongoose } = require('setup/mongodb');
 
   // setup mongodb
   await setupMongoose( process.env.MONGODB_DATABASE_NAME );
+  mailer.initialize();
+
 
   // setup express
   const expressApp = createExpressApp();

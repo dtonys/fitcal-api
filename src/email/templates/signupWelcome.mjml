@@ -1,0 +1,82 @@
+<mjml>
+  <mj-head>
+    <mj-title>Verify your account</mj-title>
+    <mj-preview>
+      Click the button below to verify your account.
+      <mj-include path="./src/server/email/templates/previewSpacer.mjml" />
+    </mj-preview>
+  </mj-head>
+  <mj-body>
+    <mj-container>
+      <!-- Header with logo -->
+      <mj-section
+        background-color="#f5f5f5"
+        border-bottom="solid black 3px"
+      >
+        <mj-group>
+          <mj-column
+            width="60%"
+          >
+            <mj-text
+              font-size="20px"
+              line-height="0"
+              align="center"
+            > Welcome to </mj-text>
+            <mj-text
+              font-size="20px"
+              line-height="35px"
+              align="center"
+            >FitCal</mj-text>
+          </mj-column>
+          <mj-column
+            width="40%"
+          >
+            <mj-image
+              padding="10"
+              width="50"
+              src="${process.env.EMAIL_IMAGE_URL_BASE}/static/apple-icon-144x144.png"
+            />
+          </mj-column>
+        </mj-group>
+
+      </mj-section>
+      <!-- Text Content -->
+      <mj-section
+        background-color="#ffffff"
+        border-bottom="solid black 3px"
+      >
+        <mj-column>
+          <mj-text>
+            Hey ${data.first_name},
+          </mj-text>
+          <mj-text>
+            Thanks for joining FitCal.
+          </mj-text>
+          <mj-text>
+            Click the button below to <a href="${data.verifyLink}">verify your account</a>.
+          </mj-text>
+        </mj-column>
+      </mj-section>
+      <!-- CTA Buttion Section -->
+      <mj-section
+        background-color="#f5f5f5"
+        border-bottom="solid black 3px"
+      >
+        <mj-column>
+          <mj-button
+            background-color="black"
+            color="white"
+            href="${data.verifyLink}"
+          >
+            Verify Account
+          </mj-button>
+        </mj-column>
+      </mj-section>
+      <!-- Footer -->
+      <%= emailPartials['footer']({ data: {
+            email: data.email
+          } })
+      %>
+    </mj-container>
+  </mj-body>
+</mjml>

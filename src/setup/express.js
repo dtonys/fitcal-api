@@ -6,6 +6,7 @@ import compression from 'compression';
 import morgan from 'morgan';
 
 import routes from 'setup/routes';
+import { renderEmail } from 'email/mailer';
 
 
 function handleErrorMiddleware( err, req, res, next ) {
@@ -52,6 +53,9 @@ export function createExpressApp() {
 
   // Handle errors
   app.use(handleErrorMiddleware);
+
+  // Preview emails
+  app.use('/email/:mailName', renderEmail);
 
   // Catch all 404
   app.all('*', (req, res) => {

@@ -15,6 +15,10 @@ const UserSchema = new Schema({
     type: [ String ],
     default: [],
   },
+  is_email_verified: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const User = mongoose.model('user', UserSchema);

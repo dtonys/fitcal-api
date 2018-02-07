@@ -27,7 +27,8 @@ router.delete('/api/users/:id', userController.remove );
 router.post('/api/signup', authController.signup );
 router.post('/api/login', authController.login );
 router.get('/api/logout', authController.logout );
-router.get('/api/session', authController.session );
+router.get('/api/session', authController.sessionInfo );
+router.get('/api/verify-email', authController.verifyEmail);
 
 // Protected APIs
 router.get('/api/admin/users', adminOnly, userController.list );

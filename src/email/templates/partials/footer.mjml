@@ -1,0 +1,25 @@
+<mj-section background-color="#ffffff" >
+  <mj-column>
+    <mj-social></mj-social>
+  </mj-column>
+  <mj-column>
+    <mj-text
+      color="#aaaaaa"
+      align="center"
+      font-size="10px"
+    >
+      <a href="${process.env.API_SERVER_BASE}/api/change-email-settings?email=${data.email}">
+        Change email settings
+      </a>
+    </mj-text>
+    <mj-text
+      color="#aaaaaa"
+      align="center"
+      font-size="10px"
+    >
+      <a href="${process.env.API_SERVER_BASE}/api/unsubscribe?email=${data.email}">
+        Unsubscribe
+      </a>
+    </mj-text>
+  </mj-column>
+</mj-section>
