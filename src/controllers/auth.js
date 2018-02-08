@@ -163,3 +163,90 @@ export const verifyEmail = handleAsyncError( async ( req, res ) => {
   // redirect to home page
   res.redirect(process.env.WEB_SERVER_BASE + '/');
 });
+
+export const lostPassword = handleAsyncError( async ( req, res ) => {
+  const { email } = req.body;
+  const user = await User.findOne({ email });
+  if ( !user ) {
+    // user not found
+    res.status(404);
+    res.json({
+      error: [ {
+        message: 'Email not found',
+      } ],
+    });
+    return;
+  }
+  mailer.resetPasswordEmail( user.email );
+  res.json({
+    data: null,
+  });
+});
+
+export const resetPassword = handleAsyncError( async ( req, res ) => {
+  const { sessionToken, password, passwordConfirm } = req.body;
+  const { currentUser, currentSession } = await getCurrentSessionAndUser( sessionToken );
+  if ( !currentSession || !currentUser ) {
+    res.status(422);
+    res.json({
+      error: [ {
+        message: 'Invalid or expired session.',
+      } ],
+    });
+    return;
+  }
+  if ( currentUser.reset_password_token !== sessionToken ) {
+    res.status(422);
+    res.json({
+      error: [ {
+        message: 'Invalid or expired session.',
+      } ],
+    });
+    return;
+  }
+
+  // validate args
+  const validationErrors = [
+    'password',
+    'passwordConfirm',
+  ].map(( requiredField ) => {
+    if ( !req.body[requiredField] ) {
+      return { message: `${requiredField} is required.` };
+    }
+    return null;
+  }).filter((error) => !!error);
+  if ( password !== passwordConfirm ) {
+    validationErrors.push({ message: 'Password and confirm must match.' });
+  }
+  if ( validationErrors.length ) {
+    res.status(422);
+    res.json({
+      error: validationErrors,
+    });
+    return;
+  }
+
+  // set the new password
+  const passwordHash = await new Promise((resolve, reject) => {
+    bcrypt.hash(password, 10, ( err, hash ) => {
+      if ( err ) {
+        reject(err);
+      }
+      resolve(hash);
+    });
+  });
+
+  currentUser.set({
+    password_hash: passwordHash,
+    reset_password_token: null,
+  });
+  await currentUser.save();
+  // destroy the session
+  await currentSession.remove();
+
+  // done
+  res.json({
+    data: null,
+  });
+});
+

@@ -28,7 +28,9 @@ router.post('/api/signup', authController.signup );
 router.post('/api/login', authController.login );
 router.get('/api/logout', authController.logout );
 router.get('/api/session', authController.sessionInfo );
-router.get('/api/verify-email', authController.verifyEmail);
+router.get('/api/verify-email', authController.verifyEmail );
+router.post('/api/lost-password', authController.lostPassword );
+router.post('/api/reset-password', authController.resetPassword );
 
 // Protected APIs
 router.get('/api/admin/users', adminOnly, userController.list );

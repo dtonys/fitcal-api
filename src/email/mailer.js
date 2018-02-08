@@ -125,3 +125,33 @@ export async function signupWelcomEmail( email ) {
     html: html,
   });
 }
+
+export async function resetPasswordEmail( email ) {
+  const user = await User.findOne({ email: email });
+  if ( !user ) {
+    console.log(`verifySignupEmail: ${email} not found`); // eslint-disable-line no-console
+    return;
+  }
+
+  // Create session
+  const session = await createSession( user._id.toString() );
+  const sessionId = session._id.toString();
+  // Save one session per user
+  user.set({ reset_password_token: sessionId });
+  await user.save();
+  // Send the token out, one time use.
+  const resetLink = `${process.env.WEB_SERVER_BASE}/reset-password?sessionToken=${sessionId}`;
+  const html = emailTemplates['resetPassword']({
+    data: {
+      email: user.email,
+      first_name: user.email,
+      resetLink: resetLink,
+    },
+  });
+  await sendMail({
+    toEmailArray: [ email ],
+    subject: 'Reset Password',
+    html: html,
+  });
+}
+
