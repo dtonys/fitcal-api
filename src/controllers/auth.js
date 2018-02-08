@@ -171,9 +171,9 @@ export const lostPassword = handleAsyncError( async ( req, res ) => {
     // user not found
     res.status(404);
     res.json({
-      error: [ {
+      error: {
         message: 'Email not found',
-      } ],
+      },
     });
     return;
   }
@@ -189,39 +189,32 @@ export const resetPassword = handleAsyncError( async ( req, res ) => {
   if ( !currentSession || !currentUser ) {
     res.status(422);
     res.json({
-      error: [ {
+      error: {
         message: 'Invalid or expired session.',
-      } ],
+      },
     });
     return;
   }
   if ( currentUser.reset_password_token !== sessionToken ) {
     res.status(422);
     res.json({
-      error: [ {
+      error: {
         message: 'Invalid or expired session.',
-      } ],
+      },
     });
     return;
   }
 
-  // validate args
-  const validationErrors = [
-    'password',
-    'passwordConfirm',
-  ].map(( requiredField ) => {
-    if ( !req.body[requiredField] ) {
-      return { message: `${requiredField} is required.` };
-    }
-    return null;
-  }).filter((error) => !!error);
+  let errorMessage = null;
   if ( password !== passwordConfirm ) {
-    validationErrors.push({ message: 'Password and confirm must match.' });
+    errorMessage = 'Password and confirm must match.';
   }
-  if ( validationErrors.length ) {
+  if ( errorMessage ) {
     res.status(422);
     res.json({
-      error: validationErrors,
+      error: {
+        message: errorMessage,
+      },
     });
     return;
   }
