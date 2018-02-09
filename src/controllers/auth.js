@@ -1,4 +1,4 @@
-import User from 'models/user';
+import User, { USER_ROLE_TRAINER } from 'models/user';
 import bcrypt from 'bcrypt';
 import {
   createSessionWithCookie,
@@ -11,11 +11,28 @@ import {
 import { handleAsyncError } from 'helpers/express';
 import * as mailer from 'email/mailer';
 
+
 export const signup = handleAsyncError( async ( req, res ) => {
   const {
     email,
     password,
+    first_name, // eslint-disable-line camelcase
+    last_name, // eslint-disable-line camelcase
+    username, // eslint-disable-line camelcase
+    phone,
+    paymentToken,
   } = req.body;
+
+  // check if payment is valid
+  if ( !paymentToken ) {
+    res.status(422);
+    res.json({
+      error: {
+        message: 'Invalid payment.',
+      },
+    });
+    return;
+  }
 
   // check if user already exists with email
   const existingUser = await User.findOne({ email: email });
@@ -38,10 +55,17 @@ export const signup = handleAsyncError( async ( req, res ) => {
       resolve(hash);
     });
   });
+
   // create user
   const user = await User.create({
     email: email,
     password_hash: passwordHash,
+    roles: [ USER_ROLE_TRAINER ],
+    first_name,
+    last_name,
+    username,
+    phone,
+    subscribed: true,
   });
 
   // log user in
