@@ -28,7 +28,7 @@ export const signup = handleAsyncError( async ( req, res ) => {
     res.status(422);
     res.json({
       error: {
-        message: 'Invalid payment.',
+        message: 'Invalid payment',
       },
     });
     return;
@@ -41,6 +41,16 @@ export const signup = handleAsyncError( async ( req, res ) => {
     res.json({
       error: {
         message: 'User email already in use',
+      },
+    });
+    return;
+  }
+  const existingUserName = await User.findOne({ username: username });
+  if ( existingUserName ) {
+    res.status(422);
+    res.json({
+      error: {
+        message: 'Username already in use',
       },
     });
     return;
