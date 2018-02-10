@@ -267,3 +267,23 @@ export const resetPassword = handleAsyncError( async ( req, res ) => {
   });
 });
 
+export const emailAvailable = handleAsyncError( async ( req, res ) => {
+  const { slug } = req.params;
+  const user = await User.findOne({ email: slug });
+  // Avoid cache
+  res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+  res.json({
+    data: !user,
+  });
+});
+
+export const usernameAvailable = handleAsyncError( async ( req, res ) => {
+  const { slug } = req.params;
+  const user = await User.findOne({ username: slug });
+  // Avoid cache
+  res.header('Cache-Control', 'private, no-cache, no-store, must-revalidate');
+  res.json({
+    data: !user,
+  });
+});
+

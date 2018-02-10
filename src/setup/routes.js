@@ -32,6 +32,9 @@ router.get('/api/verify-email', authController.verifyEmail );
 router.post('/api/lost-password', authController.lostPassword );
 router.post('/api/reset-password', authController.resetPassword );
 
+router.get('/api/email/:slug/available', authController.emailAvailable );
+router.get('/api/username/:slug/available', authController.usernameAvailable );
+
 // Protected APIs
 router.get('/api/admin/users', adminOnly, userController.list );
 router.get('/api/member/users', loggedInOnly, userController.list );
