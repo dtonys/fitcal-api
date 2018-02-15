@@ -1,10 +1,6 @@
 import mongoose, { Schema } from 'mongoose';
 
 
-export const USER_ROLE_TRAINER = 'trainer';
-export const USER_ROLE_CLIENT = 'client';
-export const USER_ROLE_ADMIN = 'admin';
-
 const UserSchema = new Schema({
   created_at: {
     type: Date,
