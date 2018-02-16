@@ -26,7 +26,7 @@
               font-size="20px"
               line-height="35px"
               align="center"
-            >FitCal</mj-text>
+            >Team Sweetcheecks</mj-text>
           </mj-column>
           <mj-column
             width="40%"
@@ -34,7 +34,7 @@
             <mj-image
               padding="10"
               width="50"
-              src="${process.env.WEB_SERVER_BASE}/static/apple-icon-144x144.png"
+              src="http://via.placeholder.com/200x200"
             />
           </mj-column>
         </mj-group>
@@ -50,7 +50,7 @@
             Hey ${data.first_name},
           </mj-text>
           <mj-text>
-            Thanks for joining FitCal.
+            Thanks for joining Team Sweetcheecks.
           </mj-text>
           <mj-text>
             Click the button below to <a href="${data.verifyLink}">verify your account</a>.
@@ -72,11 +72,6 @@
           </mj-button>
         </mj-column>
       </mj-section>
-      <!-- Footer -->
-      <%= emailPartials['footer']({ data: {
-            email: data.email
-          } })
-      %>
     </mj-container>
   </mj-body>
 </mjml>

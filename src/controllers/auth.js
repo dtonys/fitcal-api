@@ -77,8 +77,6 @@ export const signup = handleAsyncError( async ( req, res ) => {
     subscribed: true,
   });
 
-  // log user in
-  await createSessionWithCookie(user._id.toString(), res);
   // Send verification email
   mailer.signupWelcomEmail( email );
 
@@ -125,6 +123,17 @@ export const login = handleAsyncError( async ( req, res ) => {
     });
     return;
   }
+
+  if ( !user.is_email_verified ) {
+    res.status(422);
+    res.json({
+      error: {
+        message: 'This account has not been email verified.  Please check your email and click the link we sent you after you signed up.',
+      },
+    });
+    return;
+  }
+
   // log user in
   await createSessionWithCookie( user._id.toString(), res );
   // login success
@@ -194,7 +203,7 @@ export const verifyEmail = handleAsyncError( async ( req, res ) => {
   // log user in
   await createSessionWithCookie( currentUser._id.toString(), res );
   // redirect to home page
-  res.redirect(process.env.WEB_SERVER_BASE + '/');
+  res.redirect(process.env.WEB_SERVER_BASE + '/schedule');
 });
 
 export const lostPassword = handleAsyncError( async ( req, res ) => {

@@ -113,8 +113,7 @@ export async function signupWelcomEmail( email ) {
   const verifyLink = `${process.env.API_SERVER_BASE}/api/verify-email?sessionToken=${sessionId}`;
   const html = emailTemplates['signupWelcome']({
     data: {
-      email: user.email,
-      first_name: user.email,
+      first_name: user.first_name,
       verifyLink: verifyLink,
     },
   });
@@ -143,8 +142,7 @@ export async function resetPasswordEmail( email ) {
   const resetLink = `${process.env.WEB_SERVER_BASE}/reset-password?sessionToken=${sessionId}`;
   const html = emailTemplates['resetPassword']({
     data: {
-      email: user.email,
-      first_name: user.email,
+      first_name: user.first_name,
       resetLink: resetLink,
     },
   });
