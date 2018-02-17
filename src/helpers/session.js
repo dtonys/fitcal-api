@@ -77,7 +77,9 @@ export function requireRoles( roles ) {
     }
     res.status(401);
     res.json({
-      error: 'Unauthorized access',
+      error: {
+        message: 'Unauthorized access',
+      },
     });
   }
   return handleAsyncError(requireRolesMiddleware);

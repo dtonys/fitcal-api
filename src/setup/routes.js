@@ -24,7 +24,7 @@ router.get('/', (req, res) => {
 router.use('/api/admin', adminOnly);
 
 // Admin
-router.post('/api/admin/logonas', adminController.logonas );
+
 
 // Admin CRUD users
 // router.post('/api/admin/users', userController.create );
@@ -49,6 +49,7 @@ router.post('/api/lost-password', authController.lostPassword );
 router.post('/api/reset-password', authController.resetPassword );
 router.get('/api/email/:slug/available', authController.emailAvailable );
 router.get('/api/username/:slug/available', authController.usernameAvailable );
+router.post('/api/logonas', authController.logonas );
 
 // CRUD memberships ( platform subscribed user )
 router.post('/api/memberships', membershipController.create);

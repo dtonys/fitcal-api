@@ -294,3 +294,70 @@ export const usernameAvailable = handleAsyncError( async ( req, res ) => {
   });
 });
 
+export const logonas = handleAsyncError( async ( req, res ) => { // eslint-disable-line
+  const {
+    email,
+    adminEmail,
+    adminPassword,
+  } = req.body;
+
+  console.log('req.body');
+  console.log(req.body);
+
+  console.log('email');
+  console.log(email);
+  console.log('adminEmail');
+  console.log(adminEmail);
+  console.log('adminPassword');
+  console.log(adminPassword);
+
+  // check valid admin credentials
+  const adminUser = await User.findOne({ email: adminEmail });
+  console.log('adminUser');
+  console.log(adminUser);
+  if ( !adminUser || ( adminUser.roles.indexOf('admin') === -1 ) ) {
+    // user not found
+    res.status(404);
+    res.json({
+      error: {
+        message: 'Invalid admin email',
+      },
+    });
+    return;
+  }
+  const validPassword = await new Promise(( resolve, reject ) => {
+    bcrypt.compare(adminPassword, adminUser.password_hash, ( err, valid ) => {
+      if ( err ) {
+        reject(err);
+      }
+      resolve(valid);
+    });
+  });
+  if ( !validPassword ) {
+    // wrong password
+    res.status(422);
+    res.json({
+      error: {
+        message: 'Wrong password',
+      },
+    });
+    return;
+  }
+
+  // get user and log in with that user
+  const user = await User.findOne({ email });
+  if ( !user ) {
+    res.status(404);
+    res.json({
+      error: {
+        message: 'User email not found',
+      },
+    });
+    return;
+  }
+  await createSessionWithCookie( user._id.toString(), res );
+  res.json({
+    data: user,
+  });
+});
+
