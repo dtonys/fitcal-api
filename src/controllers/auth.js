@@ -23,17 +23,6 @@ export const signup = handleAsyncError( async ( req, res ) => {
     // paymentToken,
   } = req.body;
 
-  // check if payment is valid
-  // if ( !paymentToken ) {
-  //   res.status(422);
-  //   res.json({
-  //     error: {
-  //       message: 'Invalid payment',
-  //     },
-  //   });
-  //   return;
-  // }
-
   // check if user already exists with email
   const existingUser = await User.findOne({ email: email });
   if ( existingUser ) {

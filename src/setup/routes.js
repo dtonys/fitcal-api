@@ -1,9 +1,13 @@
 import { Router } from 'express';
 import * as userController from 'controllers/user';
 import * as authController from 'controllers/auth';
+import * as membershipController from 'controllers/membership';
+import * as eventController from 'controllers/events';
+import * as adminController from 'controllers/admin';
+
+
 import {
   requireRoles,
-  loggedInOnly,
 } from 'helpers/session';
 
 
@@ -16,12 +20,24 @@ router.get('/', (req, res) => {
   res.send('ok');
 });
 
-// CRUD users
-router.post('/api/users', userController.create );
-router.patch('/api/users/:id', userController.update );
-router.get('/api/users/:id', userController.get );
-router.get('/api/users', userController.list );
-router.delete('/api/users/:id', userController.remove );
+// All `/admin` prefixed routes require admin
+router.use('/api/admin', adminOnly);
+
+// Admin
+router.post('/api/admin/logonas', adminController.logonas );
+
+// Admin CRUD users
+// router.post('/api/admin/users', userController.create );
+// router.patch('/api/admin/users/:id', userController.update );
+// router.get('/api/admin/users/:id', userController.get );
+// router.get('/api/admin/users', userController.list );
+// router.delete('/api/admin/users/:id', userController.remove );
+
+// User profile
+router.post('/api/user/profile', userController.updateProfile );
+router.post('/api/user/avatar', userController.updateAvatar );
+router.get('/api/transactions', userController.getTransactions );
+router.get('/api/stripe/connect', userController.stripeConnect );
 
 // Auth APIs
 router.post('/api/signup', authController.signup );
@@ -31,12 +47,22 @@ router.get('/api/session', authController.sessionInfo );
 router.get('/api/verify-email', authController.verifyEmail );
 router.post('/api/lost-password', authController.lostPassword );
 router.post('/api/reset-password', authController.resetPassword );
-
 router.get('/api/email/:slug/available', authController.emailAvailable );
 router.get('/api/username/:slug/available', authController.usernameAvailable );
 
-// Protected APIs
-router.get('/api/admin/users', adminOnly, userController.list );
-router.get('/api/member/users', loggedInOnly, userController.list );
+// CRUD memberships ( platform subscribed user )
+router.post('/api/memberships', membershipController.create);
+router.patch('/api/memberships/:id', membershipController.update );
+router.delete('/api/memberships/:id', membershipController.remove );
+router.get('/api/memberships', membershipController.myMemberships );
+router.get('/api/subscriptions', membershipController.mySubscriptions );
+router.post('/api/subscribe/:id', membershipController.subscribe );
+
+// CRUD events ( any user )
+router.post('/api/events', eventController.create);
+router.patch('/api/events/:id', eventController.update );
+router.delete('/api/events/:id', eventController.remove );
+router.get('/api/events', eventController.myEvents );
+router.post('/api/events/:id/join', eventController.joinEvent );
 
 export default router;

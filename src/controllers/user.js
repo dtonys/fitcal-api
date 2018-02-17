@@ -47,3 +47,28 @@ export const remove = handleAsyncError( async ( req, res ) => {
     data: deletedUser,
   });
 });
+
+
+export const updateProfile = handleAsyncError( async ( req, res ) => {
+  res.json({
+    name: 'user: updateProfile',
+  });
+});
+
+export const updateAvatar = handleAsyncError( async ( req, res ) => {
+  res.json({
+    name: 'user: updateAvatar',
+  });
+});
+
+export const getTransactions = handleAsyncError( async ( req, res ) => {
+  res.json({
+    name: 'user: getTransactions',
+  });
+});
+
+export const stripeConnect = handleAsyncError( async ( req, res ) => {
+  res.json({
+    name: 'user: stripeConnect',
+  });
+});
