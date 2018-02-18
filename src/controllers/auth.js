@@ -301,20 +301,8 @@ export const logonas = handleAsyncError( async ( req, res ) => { // eslint-disab
     adminPassword,
   } = req.body;
 
-  console.log('req.body');
-  console.log(req.body);
-
-  console.log('email');
-  console.log(email);
-  console.log('adminEmail');
-  console.log(adminEmail);
-  console.log('adminPassword');
-  console.log(adminPassword);
-
   // check valid admin credentials
   const adminUser = await User.findOne({ email: adminEmail });
-  console.log('adminUser');
-  console.log(adminUser);
   if ( !adminUser || ( adminUser.roles.indexOf('admin') === -1 ) ) {
     // user not found
     res.status(404);
