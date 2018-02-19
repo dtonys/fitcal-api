@@ -10,6 +10,14 @@ import { handleAsyncError } from 'helpers/express';
 
 
 const encryptor = createEncryptor( process.env.ENCRYPTION_SECRET );
+
+export async function getCurrentUser( req ) {
+  const sessionId = req.cookies[SESSION_COOKIE_NAME];
+  if ( !sessionId ) return null;
+  const userId = encryptor.decrypt(sessionId);
+  const currentUser = await User.findOne({ _id: userId });
+  return currentUser;
+}
 export async function getCurrentSessionAndUser( sessionId ) {
   if ( !sessionId ) {
     return { user: null, session: null };

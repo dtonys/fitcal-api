@@ -3,7 +3,6 @@ import * as userController from 'controllers/user';
 import * as authController from 'controllers/auth';
 import * as membershipController from 'controllers/membership';
 import * as eventController from 'controllers/events';
-import * as adminController from 'controllers/admin';
 
 
 import {
@@ -63,7 +62,7 @@ router.post('/api/subscribe/:id', membershipController.subscribe );
 router.post('/api/events', eventController.create);
 router.patch('/api/events/:id', eventController.update );
 router.delete('/api/events/:id', eventController.remove );
-router.get('/api/events', eventController.myEvents );
+router.get('/api/events', eventController.myEventList );
 router.post('/api/events/:id/join', eventController.joinEvent );
 
 export default router;

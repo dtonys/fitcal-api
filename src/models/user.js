@@ -1,34 +1,38 @@
 import mongoose, { Schema } from 'mongoose';
 
-
+const options = {
+  timestamps: true,
+};
 const UserSchema = new Schema({
-  created_at: {
-    type: Date,
-    default: Date.now,
-  },
   first_name: {
     type: String,
+    default: null,
   },
   last_name: {
     type: String,
+    default: null,
   },
   username: {
     type: String,
     unique: true,
     required: true,
     dropDups: true,
+    default: null,
   },
   email: {
     type: String,
     unique: true,
     required: true,
     dropDups: true,
+    default: null,
   },
   phone: {
     type: String,
+    default: null,
   },
   password_hash: {
     type: String,
+    default: null,
   },
   roles: {
     type: [ String ],
@@ -40,12 +44,13 @@ const UserSchema = new Schema({
   },
   reset_password_token: {
     type: String,
+    default: null,
   },
   is_email_verified: {
     type: Boolean,
     default: false,
   },
-});
+}, options);
 
 const User = mongoose.model('user', UserSchema);
 export default User;
