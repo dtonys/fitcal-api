@@ -53,8 +53,10 @@ export const update = handleAsyncError( async ( req, res ) => {
 });
 
 export const remove = handleAsyncError( async ( req, res ) => {
+  const { id } = req.params;
+  const deletedEvent = await Event.findOneAndRemove({ _id: id });
   res.json({
-    name: 'event: remove',
+    data: deletedEvent,
   });
 });
 
