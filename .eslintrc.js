@@ -51,7 +51,7 @@ module.exports = {
     "no-multiple-empty-lines": [ "warn", { "max": 2, "maxEOF": 1 } ],
     "eol-last": [ "error", "unix" ],
     "id-length": [ "warn", { "min": 2, "exceptions": [ "_", "$", "i", "j", "k", "x", "y", "e", "t" ] } ],
-    "camelcase": "warn",
+    "camelcase": "off",
     "func-names": "warn",
     "keyword-spacing": "warn",
     "space-before-blocks": "warn",

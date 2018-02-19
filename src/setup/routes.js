@@ -7,6 +7,7 @@ import * as eventController from 'controllers/events';
 
 import {
   requireRoles,
+  loggedInOnly,
 } from 'helpers/session';
 
 
@@ -59,10 +60,11 @@ router.get('/api/subscriptions', membershipController.mySubscriptions );
 router.post('/api/subscribe/:id', membershipController.subscribe );
 
 // CRUD events ( any user )
-router.post('/api/events', eventController.create);
-router.patch('/api/events/:id', eventController.update );
-router.delete('/api/events/:id', eventController.remove );
-router.get('/api/events', eventController.myEventList );
+router.post('/api/events', loggedInOnly, eventController.create);
+router.patch('/api/events/:id', loggedInOnly, eventController.update );
+router.delete('/api/events/:id', loggedInOnly, eventController.remove );
+router.get('/api/events', loggedInOnly, eventController.myEventList );
+router.get('/api/:username/events', eventController.userEventList );
 router.post('/api/events/:id/join', eventController.joinEvent );
 
 export default router;

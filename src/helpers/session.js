@@ -12,6 +12,7 @@ import { handleAsyncError } from 'helpers/express';
 const encryptor = createEncryptor( process.env.ENCRYPTION_SECRET );
 
 export async function getCurrentUser( req ) {
+  if ( req.currentUser ) return req.currentUser;
   const sessionId = req.cookies[SESSION_COOKIE_NAME];
   if ( !sessionId ) return null;
   const userId = encryptor.decrypt(sessionId);
@@ -65,6 +66,7 @@ export async function createSessionWithCookie( userId, res ) {
 export async function loggedInOnly( req, res, next ) {
   const { currentUser } = await getCurrentSessionAndUser( req.cookies[SESSION_COOKIE_NAME] );
   if ( currentUser ) {
+    req.currentUser = currentUser;
     next();
     return;
   }
@@ -80,6 +82,7 @@ export function requireRoles( roles ) {
     const userRoles = lodashGet( currentUser, 'roles' );
     const hasRequiredRoles = userRoles && lodashDifference(roles, userRoles).length === 0;
     if ( hasRequiredRoles ) {
+      req.currentUser = currentUser;
       next();
       return;
     }
