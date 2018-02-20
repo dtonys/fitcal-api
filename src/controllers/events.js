@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Event from 'models/event';
 import User from 'models/user';
 import { handleAsyncError } from 'helpers/express';
@@ -25,7 +26,7 @@ export const create = handleAsyncError( async ( req, res ) => {
   // create resource
   const event = await Event.create({
     ...getEventData(req.body),
-    created_by: currentUser,
+    created_by: currentUser._id,
   });
 
   // return resource
@@ -84,7 +85,22 @@ export const myEventList = handleAsyncError( async ( req, res ) => {
   const currentUser = await getCurrentUser( req );
   const currentUserId = currentUser._id.toString();
   const myEvents = await Event
-    .find({ created_by: currentUser })
+    .find({ created_by: currentUser._id })
+    .sort({ start_date: 1 })
+    .lean(); // NOTE: use `lean` for read only queries, faster and no need to convert to JSON.
+
+  res.json({
+    data: {
+      items: myEvents,
+    },
+  });
+});
+
+export const myJoinedEventList = handleAsyncError( async ( req, res ) => {
+  const currentUser = await getCurrentUser( req );
+
+  const myEvents = await Event
+    .find({ attending_clients: { $in: [ currentUser._id ] } })
     .sort({ start_date: 1 })
     .lean(); // NOTE: use `lean` for read only queries, faster and no need to convert to JSON.
 
@@ -109,7 +125,7 @@ export const userEventList = handleAsyncError( async ( req, res ) => {
   }
 
   const userEvents = await Event
-    .find({ created_by: targetUser })
+    .find({ created_by: targetUser._id })
     .sort({ start_date: 1 })
     .lean(); // NOTE: use `lean` for read only queries, faster and no need to convert to JSON.
 
@@ -117,7 +133,7 @@ export const userEventList = handleAsyncError( async ( req, res ) => {
   userEvents.forEach((event) => {
     const full = ( event.attending_clients.length >= event.max_clients );
     const owned = ( event.created_by.toString() === currentUserId );
-    const attendingClientIds = event.attending_clients.map((client) => client._id.toString() );
+    const attendingClientIds = event.attending_clients.map((clientId) => clientId.toString() );
     const joined = ( attendingClientIds.includes(currentUserId) );
     const can_join = ( !full && !owned && !joined );
     event.full = full;
@@ -137,7 +153,33 @@ export const userEventList = handleAsyncError( async ( req, res ) => {
 });
 
 export const joinEvent = handleAsyncError( async ( req, res ) => {
+  const { id } = req.params;
+
+  const currentUser = await getCurrentUser( req );
+  const currentUserId = currentUser._id.toString();
+
+  const event = await Event.findById(id);
+  // Validate can join
+  const full = ( event.attending_clients.length >= event.max_clients );
+  const owned = ( event.created_by.toString() === currentUserId );
+  const attendingClientIds = event.attending_clients.map((clientId) => clientId.toString() );
+  const joined = ( attendingClientIds.includes(currentUserId) );
+  if ( full || owned || joined ) {
+    let message = '';
+    if ( full ) message = 'Event is full';
+    if ( owned ) message = 'You own this event';
+    if ( joined ) message = 'You already joined this event';
+    res.status(422);
+    res.json({
+      error: { message },
+    });
+    return;
+  }
+  // Join event
+  await event.update({
+    $addToSet: { attending_clients: currentUser._id },
+  });
   res.json({
-    name: 'event: joinEvent',
+    data: null,
   });
 });
