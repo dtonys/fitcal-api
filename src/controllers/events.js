@@ -1,5 +1,7 @@
 import mongoose from 'mongoose';
-import Event from 'models/event';
+import Event, {
+  canJoinEvent,
+} from 'models/event';
 import User from 'models/user';
 import { handleAsyncError } from 'helpers/express';
 import {
@@ -81,9 +83,27 @@ export const remove = handleAsyncError( async ( req, res ) => {
   });
 });
 
+export const get = handleAsyncError( async ( req, res ) => {
+  const { id } = req.params;
+  const currentUser = await getCurrentUser( req );
+  const event = await Event.findById(id);
+  const eventJSON = event.toJSON();
+
+  if ( !event ) {
+    res.status(404);
+    res.json({
+      error: { message: 'User not found' },
+    });
+  }
+
+  eventJSON.can_join = canJoinEvent(event, currentUser);
+  res.json({
+    data: eventJSON,
+  });
+});
+
 export const myEventList = handleAsyncError( async ( req, res ) => {
   const currentUser = await getCurrentUser( req );
-  const currentUserId = currentUser._id.toString();
   const myEvents = await Event
     .find({ created_by: currentUser._id })
     .sort({ start_date: 1 })
@@ -98,9 +118,8 @@ export const myEventList = handleAsyncError( async ( req, res ) => {
 
 export const myJoinedEventList = handleAsyncError( async ( req, res ) => {
   const currentUser = await getCurrentUser( req );
-
   const myEvents = await Event
-    .find({ attending_clients: { $in: [ currentUser._id ] } })
+    .find({ attending_clients: { $in: [ currentUser ] } })
     .sort({ start_date: 1 })
     .lean(); // NOTE: use `lean` for read only queries, faster and no need to convert to JSON.
 
@@ -125,7 +144,7 @@ export const userEventList = handleAsyncError( async ( req, res ) => {
   }
 
   const userEvents = await Event
-    .find({ created_by: targetUser._id })
+    .find({ created_by: targetUser })
     .sort({ start_date: 1 })
     .lean(); // NOTE: use `lean` for read only queries, faster and no need to convert to JSON.
 
@@ -156,25 +175,17 @@ export const joinEvent = handleAsyncError( async ( req, res ) => {
   const { id } = req.params;
 
   const currentUser = await getCurrentUser( req );
-  const currentUserId = currentUser._id.toString();
-
   const event = await Event.findById(id);
+
   // Validate can join
-  const full = ( event.attending_clients.length >= event.max_clients );
-  const owned = ( event.created_by.toString() === currentUserId );
-  const attendingClientIds = event.attending_clients.map((clientId) => clientId.toString() );
-  const joined = ( attendingClientIds.includes(currentUserId) );
-  if ( full || owned || joined ) {
-    let message = '';
-    if ( full ) message = 'Event is full';
-    if ( owned ) message = 'You own this event';
-    if ( joined ) message = 'You already joined this event';
+  if ( !canJoinEvent(event, currentUser) ) {
     res.status(422);
     res.json({
-      error: { message },
+      error: { message: 'Cannot join event.' },
     });
     return;
   }
+
   // Join event
   await event.update({
     $addToSet: { attending_clients: currentUser._id },

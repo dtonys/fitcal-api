@@ -56,5 +56,15 @@ const EventSchema = new Schema({
   // },
 }, options);
 
+export function canJoinEvent( event, user ) {
+  const currentUserId = user._id.toString();
+  const full = ( event.attending_clients.length >= event.max_clients );
+  const owned = ( event.created_by.toString() === currentUserId );
+  const attendingClientIds = event.attending_clients.map((clientId) => clientId.toString() );
+  const joined = ( attendingClientIds.includes(currentUserId) );
+  const can_join = ( !full && !owned && !joined );
+  return can_join;
+}
+
 const Event = mongoose.model('event', EventSchema);
 export default Event;
