@@ -124,7 +124,7 @@ export const login = handleAsyncError( async ( req, res ) => {
   }
 
   // log user in
-  await createSessionWithCookie( user._id.toString(), res );
+  await createSessionWithCookie( user._id.toString(), req, res );
   // login success
   res.json({
     data: user,
@@ -190,7 +190,7 @@ export const verifyEmail = handleAsyncError( async ( req, res ) => {
   await currentSession.remove();
 
   // log user in
-  await createSessionWithCookie( currentUser._id.toString(), res );
+  await createSessionWithCookie( currentUser._id.toString(), req, res );
   // redirect to home page
   res.redirect(process.env.WEB_SERVER_BASE + '/schedule');
 });
@@ -343,7 +343,7 @@ export const logonas = handleAsyncError( async ( req, res ) => { // eslint-disab
     });
     return;
   }
-  await createSessionWithCookie( user._id.toString(), res );
+  await createSessionWithCookie( user._id.toString(), req, res );
   res.json({
     data: user,
   });

@@ -1,12 +1,16 @@
 import createEncryptor from 'simple-encryptor';
 import lodashDifference from 'lodash/difference';
 import lodashGet from 'lodash/get';
+import parseDomain from 'parse-domain';
 import Session, {
   SESSION_COOKIE_NAME,
   SESSION_DURATION_SECONDS,
 } from 'models/session';
 import User from 'models/user';
-import { handleAsyncError } from 'helpers/express';
+import {
+  handleAsyncError,
+  getCrossDomainCookieValue,
+} from 'helpers/express';
 
 
 const encryptor = createEncryptor( process.env.ENCRYPTION_SECRET );
@@ -51,7 +55,7 @@ export async function createSession( userId ) {
   return session;
 }
 
-export async function createSessionWithCookie( userId, res ) {
+export async function createSessionWithCookie( userId, req, res ) {
   const createdSession = await createSession( userId );
   res.cookie(
     SESSION_COOKIE_NAME,
@@ -59,6 +63,7 @@ export async function createSessionWithCookie( userId, res ) {
     {
       httpOnly: true, // Prevent client side javascript from stealing session token
       maxAge: 1000 * SESSION_DURATION_SECONDS,
+      domain: getCrossDomainCookieValue(req),
     }
   );
 }
