@@ -64,7 +64,7 @@ router.post('/api/events', loggedInOnly, eventController.create);
 router.patch('/api/events/:id', loggedInOnly, eventController.update );
 router.delete('/api/events/:id', loggedInOnly, eventController.remove );
 router.get('/api/events/:id', eventController.get );
-router.get('/api/events', loggedInOnly, eventController.myEventList );
+router.get('/api/created/events', loggedInOnly, eventController.myEventList );
 router.get('/api/joined/events', loggedInOnly, eventController.myJoinedEventList );
 router.get('/api/:username/events', eventController.userEventList );
 router.post('/api/events/:id/join', loggedInOnly, eventController.joinEvent );

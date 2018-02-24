@@ -1,4 +1,3 @@
-import mongoose from 'mongoose';
 import Event, {
   canJoinEvent,
 } from 'models/event';
@@ -133,7 +132,6 @@ export const myJoinedEventList = handleAsyncError( async ( req, res ) => {
 export const userEventList = handleAsyncError( async ( req, res ) => {
   const { username } = req.params;
   const currentUser = await getCurrentUser( req );
-  const currentUserId = currentUser ? currentUser._id.toString() : null;
   const targetUser = await User.find({ username });
   if ( !targetUser ) {
     res.status(404);
@@ -148,19 +146,9 @@ export const userEventList = handleAsyncError( async ( req, res ) => {
     .sort({ start_date: 1 })
     .lean(); // NOTE: use `lean` for read only queries, faster and no need to convert to JSON.
 
-  // Compute can_join, other current_user properties
+  // Compute can_join
   userEvents.forEach((event) => {
-    const full = ( event.attending_clients.length >= event.max_clients );
-    const owned = ( event.created_by.toString() === currentUserId );
-    const attendingClientIds = event.attending_clients.map((clientId) => clientId.toString() );
-    const joined = ( attendingClientIds.includes(currentUserId) );
-    const can_join = ( !full && !owned && !joined );
-    event.full = full;
-    event.current_user = {
-      can_join,
-      joined,
-      owned,
-    };
+    event.can_join = canJoinEvent(event, currentUser);
   });
 
   res.json({
