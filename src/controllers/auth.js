@@ -4,8 +4,6 @@ import {
   createSessionWithCookie,
   getCurrentSessionAndUser,
   deleteSession,
-} from 'helpers/session';
-import {
   SESSION_COOKIE_NAME,
 } from 'models/session';
 import { handleAsyncError } from 'helpers/express';
@@ -57,7 +55,7 @@ export const signup = handleAsyncError( async ( req, res ) => {
 
   // create user
   const user = await User.create({
-    email: email,
+    email: email.toLowerCase(),
     password_hash: passwordHash,
     first_name,
     last_name,

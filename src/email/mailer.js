@@ -4,7 +4,7 @@ import path from 'path';
 import lodashTemplate from 'lodash/template';
 import nodemailer from 'nodemailer';
 import { mjml2html } from 'mjml';
-import { createSession } from 'helpers/session';
+import { createSession } from 'models/session';
 import User from 'models/user';
 
 

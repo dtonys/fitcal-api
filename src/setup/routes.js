@@ -8,7 +8,7 @@ import * as eventController from 'controllers/events';
 import {
   requireRoles,
   loggedInOnly,
-} from 'helpers/session';
+} from 'models/session';
 
 
 const adminOnly = requireRoles([ 'admin' ]);

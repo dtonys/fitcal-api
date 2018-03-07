@@ -5,7 +5,7 @@ import User from 'models/user';
 import { handleAsyncError } from 'helpers/express';
 import {
   getCurrentUser,
-} from 'helpers/session';
+} from 'models/session';
 
 function getEventData( body ) {
   return {
