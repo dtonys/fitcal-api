@@ -8,17 +8,12 @@ import {
 } from 'models/session';
 import { handleAsyncError } from 'helpers/express';
 import * as mailer from 'email/mailer';
+const stripe = require('stripe')(process.env.STRIPE_API_SECRET);
 
 
 export const signup = handleAsyncError( async ( req, res ) => {
   const {
-    email,
-    password,
-    first_name, // eslint-disable-line camelcase
-    last_name, // eslint-disable-line camelcase
-    username, // eslint-disable-line camelcase
-    phone,
-    // paymentToken,
+    email, password, first_name, last_name, username, phone,
   } = req.body;
 
   // check if user already exists with email
@@ -43,6 +38,11 @@ export const signup = handleAsyncError( async ( req, res ) => {
     return;
   }
 
+  // create stripe customer
+  const stripeCustomer = await stripe.customers.create({
+    email: email.toLowerCase(),
+  });
+
   // generate password hash
   const passwordHash = await new Promise((resolve, reject) => {
     bcrypt.hash(password, 10, ( err, hash ) => {
@@ -62,6 +62,7 @@ export const signup = handleAsyncError( async ( req, res ) => {
     username,
     phone,
     subscribed: true,
+    stripe_customer_id: stripeCustomer.id,
   });
 
   // Send verification email
@@ -71,6 +72,7 @@ export const signup = handleAsyncError( async ( req, res ) => {
   res.json({
     data: user,
   });
+
 });
 
 export const login = handleAsyncError( async ( req, res ) => {
@@ -190,7 +192,7 @@ export const verifyEmail = handleAsyncError( async ( req, res ) => {
   // log user in
   await createSessionWithCookie( currentUser._id.toString(), req, res );
   // redirect to home page
-  res.redirect(process.env.WEB_SERVER_BASE + '/schedule');
+  res.redirect(process.env.WEB_SERVER_BASE + '/subscribe');
 });
 
 export const lostPassword = handleAsyncError( async ( req, res ) => {

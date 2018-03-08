@@ -18,6 +18,9 @@ const UserSchema = new Schema({
   subscribed: { type: Boolean, default: false },
   reset_password_token: { type: String, default: null },
   is_email_verified: { type: Boolean, default: false },
+  // stripe
+  stripe_customer_id: { type: String, default: null },
+
 }, options);
 
 const User = mongoose.model('user', UserSchema);

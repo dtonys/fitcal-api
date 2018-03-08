@@ -1,5 +1,18 @@
 import { handleAsyncError } from 'helpers/express';
+import {
+  getCurrentUser,
+} from 'models/session';
+import { subscribeToPlatform } from 'models/subscription';
 
+
+export const platformSubscribe = handleAsyncError( async ( req, res ) => {
+  // get current user
+  const currentUser = await getCurrentUser( req );
+  const subcription = subscribeToPlatform( currentUser );
+  res.json({
+    data: subcription,
+  });
+});
 
 export const create = handleAsyncError( async ( req, res ) => {
   res.json({

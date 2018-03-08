@@ -52,6 +52,7 @@ router.get('/api/username/:slug/available', authController.usernameAvailable );
 router.post('/api/logonas', authController.logonas );
 
 // CRUD memberships ( platform subscribed user )
+router.post('/api/platform/subscribe', loggedInOnly, membershipController.platformSubscribe);
 router.post('/api/memberships', membershipController.create);
 router.patch('/api/memberships/:id', membershipController.update );
 router.delete('/api/memberships/:id', membershipController.remove );
