@@ -3,7 +3,7 @@ import * as userController from 'controllers/user';
 import * as authController from 'controllers/auth';
 import * as membershipController from 'controllers/membership';
 import * as eventController from 'controllers/events';
-
+import { verifyWebhookSignature } from 'helpers/stripeWebhook';
 
 import {
   requireRoles,
@@ -51,8 +51,31 @@ router.get('/api/email/:slug/available', authController.emailAvailable );
 router.get('/api/username/:slug/available', authController.usernameAvailable );
 router.post('/api/logonas', authController.logonas );
 
+// Stripe webhook endpoint
+router.post(
+  '/api/stripe/webhook',
+  // verifyWebhookSignature,
+  membershipController.stripeWebhook,
+);
+
+// Subscription
+
 // CRUD memberships ( platform subscribed user )
-router.post('/api/platform/subscribe', loggedInOnly, membershipController.platformSubscribe);
+router.post(
+  '/api/platform/subscribe',
+  loggedInOnly,
+  membershipController.platformSubscribe,
+);
+router.post(
+  '/api/platform/unsubscribe',
+  loggedInOnly,
+  membershipController.platformUnSubscribe,
+);
+
+// Payment method ( comes from stripe )
+router.get('/api/payment/method', membershipController.getPaymentMethod);
+router.post('/api/payment/method/update', membershipController.updatePaymentMethod);
+
 router.post('/api/memberships', membershipController.create);
 router.patch('/api/memberships/:id', membershipController.update );
 router.delete('/api/memberships/:id', membershipController.remove );

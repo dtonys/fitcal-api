@@ -8,7 +8,6 @@ import {
 } from 'models/session';
 import { handleAsyncError } from 'helpers/express';
 import * as mailer from 'email/mailer';
-const stripe = require('stripe')(process.env.STRIPE_API_SECRET);
 
 
 export const signup = handleAsyncError( async ( req, res ) => {
@@ -38,11 +37,6 @@ export const signup = handleAsyncError( async ( req, res ) => {
     return;
   }
 
-  // create stripe customer
-  const stripeCustomer = await stripe.customers.create({
-    email: email.toLowerCase(),
-  });
-
   // generate password hash
   const passwordHash = await new Promise((resolve, reject) => {
     bcrypt.hash(password, 10, ( err, hash ) => {
@@ -61,8 +55,6 @@ export const signup = handleAsyncError( async ( req, res ) => {
     last_name,
     username,
     phone,
-    subscribed: true,
-    stripe_customer_id: stripeCustomer.id,
   });
 
   // Send verification email
