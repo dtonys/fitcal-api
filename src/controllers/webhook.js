@@ -1,6 +1,6 @@
 import { handleAsyncError } from 'helpers/express';
 import Subscription, { isSubscribed } from 'models/subscription';
-import StripeWebhook from 'models/stripe_webhook';
+import StripeEvent from 'models/stripe_event';
 import InvoicePayment from 'models/invoice_payment';
 import User from 'models/user';
 import slackMessage from 'services/slackMessage';
@@ -59,13 +59,15 @@ export const stripeWebhook = handleAsyncError( async ( req, res ) => { // eslint
   // relay webhook event to slack
   slackMessage( `${event.type} - https://dashboard.stripe.com/test/events/${event.id}`);
 
-  // exit if webhook event is not a type we care about
-  if ( WEBHOOK_EVENT_TYPES.indexOf( event.type ) === -1 ) return;
+  // return 200 if webhook event is not a type we care about
+  if ( WEBHOOK_EVENT_TYPES.indexOf( event.type ) === -1 ) {
+    res.sendStatus(200);
+    return;
+  }
 
   // Do not process the same event more than once
-  const exists = await StripeWebhook.count({ _id: event.id });
+  const exists = await StripeEvent.count({ _id: event.id });
   if ( exists ) return;
-  await StripeWebhook.create({ _id: event.id });
 
   /* Process webhooks, based on type */
   // Update subscription status whenever it changes
@@ -81,6 +83,9 @@ export const stripeWebhook = handleAsyncError( async ( req, res ) => { // eslint
   if ( event.type === 'invoice.payment_succeeded' ) {
     createInvoiceRecord(event);
   }
+
+  // Create the resource after operations are successful
+  await StripeEvent.create({ _id: event.id });
 
   // Always return 200 success response
   res.sendStatus(200);

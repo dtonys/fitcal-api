@@ -12,10 +12,10 @@ const SUBSCRIPTION_STATUS_ACTIVE = 'active';
 const SUBSCRIPTION_STATUS_PAST_DUE = 'past_due';
 // canceled, subscription is deleted, no new invoices are created.
 // Use must re-subscribe to get back onto platform
-const SUBSCRIPTION_STATUS_CANCELED = 'canceled';
+// const SUBSCRIPTION_STATUS_CANCELED = 'canceled';
 // unpaid, new invoiced are created but immediately closed, and not billed.
 // Pay the most recent invoice to set status back to active
-const SUBSCRIPTION_STATUS_UNPAID = 'unpaid';
+// const SUBSCRIPTION_STATUS_UNPAID = 'unpaid';
 export function isSubscribed( subscriptionStatus ) {
   return (
     subscriptionStatus === SUBSCRIPTION_STATUS_ACTIVE ||
@@ -47,7 +47,7 @@ SubscriptionSchema.methods.cancelPlatformSubscription = async function () { // e
   await this.save();
 };
 
-const Subscription = mongoose.model('stripe_subscription', SubscriptionSchema);
+const Subscription = mongoose.model('subscription', SubscriptionSchema);
 export default Subscription;
 
 export async function subscribeToPlatform( user, token ) {
