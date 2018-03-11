@@ -1,6 +1,6 @@
 const stripe = require('stripe')(process.env.STRIPE_API_SECRET);
 
-export function verifyWebhookSignature( req, res, next ) { // eslint-disable-line
+export function verifyStripeSignature( req, res, next ) { // eslint-disable-line
   const sig = req.headers[ 'stripe-signature' ];
   try {
     const event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET );

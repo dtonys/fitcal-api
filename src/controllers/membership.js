@@ -57,33 +57,6 @@ export const updatePaymentMethod = handleAsyncError( async ( req, res ) => {
   });
 });
 
-export const stripeWebhook = handleAsyncError( async ( req, res ) => {
-  // verify stripe signature
-  // req.stripeWebhookEvent
-  console.log('req.stripeWebhookEvent');
-  console.log(req.stripeWebhookEvent);
-  console.log('req.body');
-  console.log(req.body);
-
-  // const event = req.body;
-  // const eventMap = {
-  //   'customer.subscription.deleted': '',
-  //   'customer.subscription.updated': '',
-  // };
-
-  res.sendStatus(200);
-  // process.env.STRIPE_WEBHOOK_SECRET;
-
-  // filter already processed webhoos
-
-  // add idempotency key
-
-  // relay webhook event to slack
-
-  // return 200 success response
-
-});
-
 export const create = handleAsyncError( async ( req, res ) => {
   res.json({
     name: 'membership: create',
