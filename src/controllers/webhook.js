@@ -4,6 +4,7 @@ import StripeWebhook from 'models/stripe_webhook';
 import InvoicePayment from 'models/invoice_payment';
 import User from 'models/user';
 import slackMessage from 'services/slackMessage';
+import { WEBHOOK_EVENT_TYPES } from 'helpers/stripeWebhook';
 const stripe = require('stripe')(process.env.STRIPE_API_SECRET);
 
 
@@ -11,7 +12,7 @@ const stripe = require('stripe')(process.env.STRIPE_API_SECRET);
 const syncSubscriptionStatus = async ( event ) => {
   const { id, status, customer } = event.data.object;
   const [ subscription, user ] = await Promise.all([
-    Subscription.findOne({ _id: id }),
+    Subscription.findOne({ stripe_subscription_id: id }),
     User.findOne({ stripe_customer_id: customer }),
   ]);
   subscription.status = status;
@@ -50,18 +51,21 @@ const createInvoiceRecord = async ( event ) => {
 };
 
 export const stripeWebhook = handleAsyncError( async ( req, res ) => { // eslint-disable-line
-  const event = req.stripeWebhookEvent || req.body;
+  const event = req.stripeWebhookEvent;
 
   // Do not process test events in production
   if ( process.env.NODE_ENV === 'production' && !event.livemode ) return;
+
+  // relay webhook event to slack
+  slackMessage( `${event.type} - https://dashboard.stripe.com/test/events/${event.id}`);
+
+  // exit if webhook event is not a type we care about
+  if ( WEBHOOK_EVENT_TYPES.indexOf( event.type ) === -1 ) return;
 
   // Do not process the same event more than once
   const exists = await StripeWebhook.count({ _id: event.id });
   if ( exists ) return;
   await StripeWebhook.create({ _id: event.id });
-
-  // relay webhook event to slack
-  slackMessage( `${event.type} - https://dashboard.stripe.com/test/events/${event.id}`);
 
   /* Process webhooks, based on type */
   // Update subscription status whenever it changes

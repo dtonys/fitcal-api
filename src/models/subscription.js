@@ -1,4 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
+import User from 'models/user';
 const stripe = require('stripe')(process.env.STRIPE_API_SECRET);
 
 
@@ -36,8 +37,14 @@ const SubscriptionSchema = new Schema({
 
 // delete user's subscription
 SubscriptionSchema.methods.cancelPlatformSubscription = async function () { // eslint-disable-line func-names
-  await stripe.subscriptions.del( this.stripe_subscription_id );
-  // webhook should update the user and subscription status
+  const user = await User.findById( this.user );
+  const stripeSubscription = await stripe.subscriptions.del( this.stripe_subscription_id );
+  // mark user as unsubscribed
+  user.subscribed = isSubscribed(stripeSubscription.status);
+  await user.save();
+  // sync subscription status
+  this.status = stripeSubscription.status;
+  await this.save();
 };
 
 const Subscription = mongoose.model('stripe_subscription', SubscriptionSchema);
@@ -67,7 +74,9 @@ export async function subscribeToPlatform( user, token ) {
     stripe_subscription_id: stripeSubscription.id,
     status: stripeSubscription.status,
   });
-  // webhook should update the users's subscription status
+  // update user's subscription status
+  user.subscribed = isSubscribed(stripeSubscription.status);
+  await user.save();
 
   return sub;
 }

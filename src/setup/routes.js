@@ -3,8 +3,9 @@ import * as userController from 'controllers/user';
 import * as authController from 'controllers/auth';
 import * as membershipController from 'controllers/membership';
 import * as eventController from 'controllers/events';
-import { verifyStripeSignature } from 'helpers/stripeWebhook';
+import { verifyStripeSignature, STRIPE_WEBHOOK_ENDPOINT } from 'helpers/stripeWebhook';
 import { stripeWebhook } from 'controllers/webhook';
+import bodyParser from 'body-parser';
 
 import {
   requireRoles,
@@ -53,7 +54,12 @@ router.get('/api/username/:slug/available', authController.usernameAvailable );
 router.post('/api/logonas', authController.logonas );
 
 // Stripe webhook endpoint
-router.post( '/api/stripe/webhook', verifyStripeSignature, stripeWebhook );
+router.post(
+  STRIPE_WEBHOOK_ENDPOINT,
+  bodyParser.raw({ type: '*/*' }),
+  verifyStripeSignature,
+  stripeWebhook
+);
 
 // Subscription
 
