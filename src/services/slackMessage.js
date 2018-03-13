@@ -6,7 +6,7 @@ slack.setWebhook(process.env.SLACK_WEBHOOK_URL);
 
 export default ( text, username = 'web-server-events' ) => {
   slack.webhook({
-    channel: '#web-events',
+    channel: `#${process.env.SLACK_WEBHOOK_CHANNEL}`,
     username,
     text,
   }, () => {});
