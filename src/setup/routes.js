@@ -56,7 +56,6 @@ router.post('/api/logonas', authController.logonas );
 // Stripe webhook endpoint
 router.post(
   STRIPE_WEBHOOK_ENDPOINT,
-  bodyParser.raw({ type: '*/*' }),
   verifyStripeSignature,
   stripeWebhook
 );
