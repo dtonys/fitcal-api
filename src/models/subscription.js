@@ -24,7 +24,6 @@ export function isSubscribed( subscriptionStatus ) {
   );
 }
 
-const PLATFORM_SUBSCRIBE_PLAN = 'tsc_standard';
 const options = {
   timestamps: true,
 };
@@ -64,7 +63,7 @@ export async function subscribeToPlatform( user, token ) {
   // create stripe subscription,
   const stripeSubscription = await stripe.subscriptions.create({
     customer: user.stripe_customer_id,
-    items: [ { plan: PLATFORM_SUBSCRIBE_PLAN } ],
+    items: [ { plan: process.env.PLATFORM_SUBSCRIBE_PLAN } ],
   });
 
   // create subscription record
