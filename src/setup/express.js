@@ -5,7 +5,6 @@ import helmet from 'helmet';
 import compression from 'compression';
 import morgan from 'morgan';
 
-import { STRIPE_WEBHOOK_ENDPOINT } from 'helpers/stripeWebhook';
 import routes from 'setup/routes';
 import { renderEmail } from 'email/mailer';
 
@@ -45,14 +44,6 @@ export function createExpressApp() {
   app.use(helmet.hidePoweredBy());
   app.use(compression());
   app.use(cookieParser());
-  app.use(bodyParser.json({
-    verify: ( req, res, buf ) => {
-      const url = req.originalUrl;
-      if ( url.startsWith(STRIPE_WEBHOOK_ENDPOINT) ) {
-        req.rawBody = buf.toString();
-      }
-    },
-  }));
   app.use(bodyParser.urlencoded({ extended: true }));
   app.use(morgan('[:date[iso]] :method :url :status :response-time ms - :res[content-length]'));
 

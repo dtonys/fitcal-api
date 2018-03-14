@@ -20,3 +20,4 @@ export function getCrossDomainCookieValue( req ) {
   }
   return undefined;
 }
+
