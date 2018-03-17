@@ -4,35 +4,32 @@ import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import compression from 'compression';
 import morgan from 'morgan';
+import serializeError from 'serialize-error';
 
 import routes from 'setup/routes';
 import { renderEmail } from 'email/mailer';
+import Raven from 'raven';
 
 
-function handleErrorMiddleware( err, req, res, next ) {
+// NOTE: We're going to override the default express middleware
+function handleErrorMiddleware( err, req, res, next ) { // eslint-disable-line no-unused-vars
   // NOTE: Add additional error processing here
-  console.log('handleErrorMiddleware'); // eslint-disable-line no-console
-  console.log(err); // eslint-disable-line no-console
-  // Pass to express' default error handler, which will return
-  // `Internal Server Error` when `process.env.NODE_ENV === production` and
-  // a stack trace otherwise
-  next(err);
-}
+  console.error('handleErrorMiddleware'); // eslint-disable-line no-console
+  console.error(err); // eslint-disable-line no-console
 
-function handleUncaughtErrors() {
-  process.on('uncaughtException', ( error ) => {
-    // NOTE: Add additional error processing here
-    console.log('uncaughtException'); // eslint-disable-line no-console
-    console.log(error); // eslint-disable-line no-console
-    process.exit(1);
-  });
-  // NOTE: Treat promise rejections the same as an uncaught error,
-  // as both can be invoked by a JS error
-  process.on('unhandledRejection', ( error ) => {
-    // NOTE: Add additional error processing here
-    console.log('unhandledRejection'); // eslint-disable-line no-console
-    console.log(error); // eslint-disable-line no-console
-    process.exit(1);
+  // In production, hide the error, return a generic `internal_server_error` response
+  if ( process.env.NODE_ENV === 'production' ) {
+    res.status(500);
+    res.json({
+      internal_server_error: true,
+    });
+    return;
+  }
+  // In development, expose the error details to the client
+  res.status(500);
+  res.json({
+    internal_server_error: true,
+    ...serializeError(err),
   });
 }
 
@@ -41,6 +38,9 @@ export function createExpressApp() {
   const app = express();
 
   // middleware
+  if ( process.env.NODE_ENV === 'production' ) {
+    app.use(Raven.requestHandler());
+  }
   app.use(helmet.hidePoweredBy());
   app.use(compression());
   app.use(cookieParser());
@@ -50,9 +50,6 @@ export function createExpressApp() {
   // api routes
   app.use(routes);
 
-  // Handle errors
-  app.use(handleErrorMiddleware);
-
   // Preview emails
   app.use('/email/:mailName', renderEmail);
 
@@ -61,6 +58,13 @@ export function createExpressApp() {
     res.status(404);
     res.send('API not found.');
   });
+
+  // Handle errors
+  if ( process.env.NODE_ENV === 'production' ) {
+    app.use(Raven.errorHandler());
+  }
+  app.use(handleErrorMiddleware);
+
   return app;
 }
 
@@ -70,7 +74,6 @@ export function startExpressServer( app, port = process.env.API_PORT ) {
       if ( err ) {
         reject(err);
       }
-      handleUncaughtErrors();
       console.log(`API server listening on ${process.env.API_PORT} in ${app.settings.env} mode.`); // eslint-disable-line no-console
       resolve(listener);
     });

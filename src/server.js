@@ -1,6 +1,25 @@
 import path from 'path';
 import dotenv from 'dotenv';
+import Raven from 'raven';
 
+
+function setupErrorHandling() {
+  // setup sentry error reporting, only in production environment
+  const ravenConfigUrl = process.env.NODE_ENV === 'production'
+    ? process.env.SENTRY_CONFIG_URL
+    : false;
+
+  Raven.config(ravenConfigUrl).install();
+
+  // Ensure that unhandledRejection is logged and exits the server
+  process.on('unhandledRejection', (error) => {
+    console.error('unhandledRejection'); // eslint-disable-line no-console
+    console.error(error); // eslint-disable-line no-console
+    Raven.captureException(error, ( /* sendErr, eventId */ ) => {
+      process.exit(1);
+    });
+  });
+}
 
 async function bootstrap() {
   // load envs
@@ -21,10 +40,11 @@ async function bootstrap() {
   // setup express
   const expressApp = createExpressApp();
   await startExpressServer(expressApp);
+  setupErrorHandling();
 }
 
 bootstrap()
   .catch((error) => {
-    console.log('bootstrap error'); // eslint-disable-line no-console
-    console.log(error); // eslint-disable-line no-console
+    console.error('bootstrap error'); // eslint-disable-line no-console
+    console.error(error); // eslint-disable-line no-console
   });

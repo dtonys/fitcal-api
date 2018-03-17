@@ -3,6 +3,7 @@ import * as userController from 'controllers/user';
 import * as authController from 'controllers/auth';
 import * as membershipController from 'controllers/membership';
 import * as eventController from 'controllers/events';
+import * as errorsController from 'controllers/errorExamples';
 import {
   verifyStripeSignature,
   addRawBody,
@@ -56,6 +57,12 @@ router.get('/api/email/:slug/available', authController.emailAvailable );
 router.get('/api/username/:slug/available', authController.usernameAvailable );
 router.post('/api/logonas', authController.logonas );
 
+// Error handling examples, trigger ~4 types of errors
+router.get('/api/handled-sync-error', errorsController.handledSyncError);
+router.get('/api/handled-async-error', errorsController.handledAsyncError);
+router.get('/api/unhandled-exception', errorsController.unhandledException);
+router.get('/api/unhandled-rejection', errorsController.unhandledRejection);
+
 // Stripe webhook endpoint
 router.post(
   STRIPE_WEBHOOK_ENDPOINT,
@@ -64,9 +71,7 @@ router.post(
   stripeWebhook
 );
 
-// Subscription
-
-// CRUD memberships ( platform subscribed user )
+// Subscriptions, payments
 router.post(
   '/api/platform/subscribe',
   loggedInOnly,
@@ -77,11 +82,10 @@ router.post(
   loggedInOnly,
   membershipController.platformUnSubscribe,
 );
-
-// Payment method ( comes from stripe )
 router.get('/api/payment/method', membershipController.getPaymentMethod);
 router.post('/api/payment/method/update', membershipController.updatePaymentMethod);
 
+// CRUD memberships
 router.post('/api/memberships', membershipController.create);
 router.patch('/api/memberships/:id', membershipController.update );
 router.delete('/api/memberships/:id', membershipController.remove );
