@@ -44,6 +44,7 @@ export function createExpressApp() {
   app.use(helmet.hidePoweredBy());
   app.use(compression());
   app.use(cookieParser());
+  app.use(bodyParser.json());
   app.use(bodyParser.urlencoded({ extended: true }));
   app.use(morgan('[:date[iso]] :method :url :status :response-time ms - :res[content-length]'));
 
