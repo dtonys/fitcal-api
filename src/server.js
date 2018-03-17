@@ -36,11 +36,13 @@ async function bootstrap() {
   await setupMongoose( process.env.MONGODB_DATABASE_NAME );
   mailer.initialize();
 
+  // setup error logging
+  setupErrorHandling();
 
   // setup express
   const expressApp = createExpressApp();
   await startExpressServer(expressApp);
-  setupErrorHandling();
+
 }
 
 bootstrap()
