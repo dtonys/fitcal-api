@@ -10,9 +10,10 @@ export const platformSubscribe = handleAsyncError( async ( req, res ) => {
   const { token } = req.body;
   // get current user
   const currentUser = await getCurrentUser( req );
-  const subcription = await subscribeToPlatform( currentUser, token );
+  const subscription = await subscribeToPlatform( currentUser, token );
+
   res.json({
-    data: subcription,
+    data: subscription,
   });
 });
 

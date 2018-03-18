@@ -12,11 +12,49 @@ import { STRIPE_WEBHOOK_ENDPOINT } from 'helpers/stripeWebhook';
 import Raven from 'raven';
 
 
+function handleStripeError( error ) {
+  switch (error.type) {
+    case 'StripeCardError':
+      // A declined card error
+      return error.message;
+    case 'RateLimitError':
+      // Too many requests made to the API too quickly
+      return 'Payment server is busy, please try again.';
+    case 'StripeInvalidRequestError':
+      // Invalid parameters were supplied to Stripe's API
+      return 'Internal Server Error.';
+    case 'StripeAPIError':
+      // An error occurred internally with Stripe's API
+      return 'Internal Server Error.';
+    case 'StripeConnectionError':
+      // Some kind of error occurred during the HTTPS communication
+      return 'Internal Server Error.';
+    case 'StripeAuthenticationError':
+      return 'Internal Server Error.';
+    default:
+      return false;
+  }
+}
+
 // NOTE: We're going to override the default express middleware
 function handleErrorMiddleware( err, req, res, next ) { // eslint-disable-line no-unused-vars
   // NOTE: Add additional error processing here
   console.error('handleErrorMiddleware'); // eslint-disable-line no-console
   console.error(err); // eslint-disable-line no-console
+
+  // If the error is a stripe error, handle and respond
+  if ( err.type ) {
+    const stripeErrorMessage = handleStripeError(err);
+    if ( stripeErrorMessage ) {
+      res.status(422);
+      res.json({
+        error: {
+          message: stripeErrorMessage,
+        },
+      });
+      return;
+    }
+  }
 
   // In production, hide the error, return a generic `internal_server_error` response
   if ( process.env.NODE_ENV === 'production' ) {
