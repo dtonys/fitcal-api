@@ -48,10 +48,23 @@ export const getPaymentMethod = handleAsyncError( async ( req, res ) => {
 export const updatePaymentMethod = handleAsyncError( async ( req, res ) => {
   const { token } = req.body;
   const currentUser = await getCurrentUser( req );
-  await stripe.customers.update(
-    currentUser.stripe_customer_id,
-    { source: token },
-  );
+
+  // If no customer, create customer with payment method
+  if ( !currentUser.stripe_customer_id ) {
+    const customer = await stripe.customers.create({
+      email: currentUser.email,
+      source: token,
+    });
+    currentUser.stripe_customer_id = customer.id;
+    await currentUser.save();
+  }
+  // Update the customer's payment method
+  else {
+    await stripe.customers.update(
+      currentUser.stripe_customer_id,
+      { source: token },
+    );
+  }
   res.json({
     data: null,
   });

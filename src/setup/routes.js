@@ -6,7 +6,6 @@ import * as eventController from 'controllers/events';
 import * as errorsController from 'controllers/errorExamples';
 import {
   verifyStripeSignature,
-  addRawBody,
   STRIPE_WEBHOOK_ENDPOINT,
 } from 'helpers/stripeWebhook';
 import { stripeWebhook } from 'controllers/webhook';
@@ -66,7 +65,6 @@ router.get('/api/unhandled-rejection', errorsController.unhandledRejection);
 // Stripe webhook endpoint
 router.post(
   STRIPE_WEBHOOK_ENDPOINT,
-  addRawBody,
   verifyStripeSignature,
   stripeWebhook
 );

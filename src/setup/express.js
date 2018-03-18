@@ -8,6 +8,7 @@ import serializeError from 'serialize-error';
 
 import routes from 'setup/routes';
 import { renderEmail } from 'email/mailer';
+import { STRIPE_WEBHOOK_ENDPOINT } from 'helpers/stripeWebhook';
 import Raven from 'raven';
 
 
@@ -44,7 +45,15 @@ export function createExpressApp() {
   app.use(helmet.hidePoweredBy());
   app.use(compression());
   app.use(cookieParser());
-  app.use(bodyParser.json());
+  app.use(bodyParser.json({
+    // Because Stripe needs the raw body, we compute it but only when hitting the Stripe callback URL.
+    verify: (req, res, buf) => {
+      const url = req.originalUrl;
+      if (url.startsWith(STRIPE_WEBHOOK_ENDPOINT)) {
+        req.rawBody = buf.toString();
+      }
+    },
+  }));
   app.use(bodyParser.urlencoded({ extended: true }));
   app.use(morgan('[:date[iso]] :method :url :status :response-time ms - :res[content-length]'));
 

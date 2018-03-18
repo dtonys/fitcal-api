@@ -67,7 +67,10 @@ export const stripeWebhook = handleAsyncError( async ( req, res ) => { // eslint
 
   // Do not process the same event more than once
   const exists = await StripeEvent.count({ _id: event.id });
-  if ( exists ) return;
+  if ( exists ) {
+    res.sendStatus(200);
+    return;
+  }
 
   /* Process webhooks, based on type */
   // Update subscription status whenever it changes
