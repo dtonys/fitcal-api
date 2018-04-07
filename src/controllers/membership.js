@@ -55,7 +55,19 @@ export const stripeConnectAuthorize = handleAsyncError( async ( req, res ) => {
       code: code,
     });
 
-  currentUser.stripe_connect_user_id = response.body.stripe_user_id;
+  // extract and save the connect token
+  const {
+    access_token,
+    refresh_token,
+    stripe_publishable_key,
+    stripe_user_id,
+  } = response.body;
+  currentUser.stripe_connect_token = {
+    access_token,
+    refresh_token,
+    stripe_publishable_key,
+    stripe_user_id,
+  };
   await currentUser.save();
 
   // Redirect to subscribe page

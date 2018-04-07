@@ -1,5 +1,12 @@
 import mongoose, { Schema } from 'mongoose';
 
+const StripeConnectToken = new Schema({
+  access_token: String,
+  refresh_token: String,
+  stripe_publishable_key: String,
+  stripe_user_id: String,
+});
+
 const options = {
   timestamps: true,
 };
@@ -20,7 +27,7 @@ const UserSchema = new Schema({
   is_email_verified: Boolean,
   // stripe
   stripe_customer_id: String,
-  stripe_connect_user_id: String,
+  stripe_connect_token: StripeConnectToken,
 }, options);
 
 const User = mongoose.model('user', UserSchema);
