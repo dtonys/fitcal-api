@@ -28,10 +28,10 @@ const options = {
   timestamps: true,
 };
 const SubscriptionSchema = new Schema({
-  user: { type: Schema.Types.ObjectId, ref: 'user', default: null },
-  plan: { type: String, default: null },
-  stripe_subscription_id: { type: String, default: null },
-  status: { type: String, default: null },
+  user: { type: Schema.Types.ObjectId, ref: 'user' },
+  plan: String,
+  stripe_subscription_id: String,
+  status: String,
 }, options);
 
 // delete user's subscription

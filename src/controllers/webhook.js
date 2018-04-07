@@ -74,7 +74,7 @@ export const stripeWebhook = handleAsyncError( async ( req, res ) => { // eslint
 
   /* Process webhooks, based on type */
   // Update subscription status whenever it changes
-  console.log('Processing: ' + event.type);
+  console.log('Processing: ' + event.type); // eslint-disable-line
   if (
     event.type === 'customer.subscription.created' ||
     event.type === 'customer.subscription.updated' ||

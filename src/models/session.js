@@ -16,7 +16,7 @@ export const SESSION_COOKIE_NAME = 'Session';
 const SessionSchema = new Schema({
   _id: String,
   createdAt: { type: Date, expires: SESSION_DURATION_SECONDS, default: Date.now },
-  stripeConnectCSRFState: { type: String, default: null },
+  stripeConnectCSRFState: String,
 });
 const Session  = mongoose.model('session', SessionSchema);
 export default Session;

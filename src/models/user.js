@@ -4,24 +4,23 @@ const options = {
   timestamps: true,
 };
 const UserSchema = new Schema({
-  first_name: { type: String, default: null },
-  last_name: { type: String, default: null },
+  first_name: String,
+  last_name: String,
   username: {
-    type: String, unique: true, required: true, dropDups: true, default: null,
+    type: String, unique: true, dropDups: true,
   },
   email: {
-    type: String, unique: true, required: true, dropDups: true, default: null,
+    type: String, unique: true, dropDups: true,
   },
-  phone: { type: String, default: null },
-  password_hash: { type: String, default: null },
-  roles: { type: [ String ], default: [] },
-  subscribed: { type: Boolean, default: false },
-  reset_password_token: { type: String, default: null },
-  is_email_verified: { type: Boolean, default: false },
+  phone: String,
+  password_hash: String,
+  roles: [ String ],
+  subscribed: Boolean,
+  reset_password_token: String,
+  is_email_verified: Boolean,
   // stripe
-  stripe_customer_id: { type: String, default: null },
-  stripe_connect_user_id: { type: String, default: null },
-
+  stripe_customer_id: String,
+  stripe_connect_user_id: String,
 }, options);
 
 const User = mongoose.model('user', UserSchema);
