@@ -20,6 +20,7 @@ const UserSchema = new Schema({
   is_email_verified: { type: Boolean, default: false },
   // stripe
   stripe_customer_id: { type: String, default: null },
+  stripe_connect_user_id: { type: String, default: null },
 
 }, options);
 

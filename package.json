@@ -41,6 +41,7 @@
     "nodemailer": "^4.4.2",
     "nodemon": "^1.14.11",
     "parse-domain": "^2.0.0",
+    "querystring": "^0.2.0",
     "raven": "^2.4.2",
     "serialize-error": "^2.1.0",
     "simple-encryptor": "^1.1.1",

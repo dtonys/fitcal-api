@@ -61,14 +61,3 @@ export const updateAvatar = handleAsyncError( async ( req, res ) => {
   });
 });
 
-export const getTransactions = handleAsyncError( async ( req, res ) => {
-  res.json({
-    name: 'user: getTransactions',
-  });
-});
-
-export const stripeConnect = handleAsyncError( async ( req, res ) => {
-  res.json({
-    name: 'user: stripeConnect',
-  });
-});

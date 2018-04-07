@@ -1,9 +1,66 @@
+import superagent from 'superagent';
 import { handleAsyncError } from 'helpers/express';
+import Subscription, { subscribeToPlatform } from 'models/subscription';
+import querystring from 'querystring';
 import {
+  SESSION_COOKIE_NAME,
+  getCurrentSessionAndUser,
   getCurrentUser,
 } from 'models/session';
-import Subscription, { subscribeToPlatform } from 'models/subscription';
 const stripe = require('stripe')(process.env.STRIPE_API_SECRET);
+
+
+export const stripeConnect = handleAsyncError( async ( req, res ) => {
+  const { currentUser, currentSession } = await getCurrentSessionAndUser( req.cookies[SESSION_COOKIE_NAME] );
+  // Generate a random string as state to protect from CSRF and place it in the session.
+  const csrfState = Math.random().toString(36).slice(2);
+  currentSession.stripeConnectCSRFState = csrfState;
+  await currentSession.save();
+
+  const parameters = {
+    client_id: process.env.STRIPE_CONNECT_CLIENT_ID,
+    state: csrfState,
+    'stripe_user[email]': currentUser.email,
+    'stripe_user[first_name]': currentUser.first_name,
+    'stripe_user[last_name]': currentUser.last_name,
+    'stripe_user[phone_number]': currentUser.phone,
+  };
+  // Redirect to Stripe to start the Connect onboarding.
+  res.redirect( `${process.env.STRIPE_CONNECT_AUTHORIZE_URL}?${querystring.stringify(parameters)}` );
+});
+
+export const stripeConnectAuthorize = handleAsyncError( async ( req, res ) => {
+  const { code, state } = req.query;
+  const { currentUser, currentSession } = await getCurrentSessionAndUser( req.cookies[SESSION_COOKIE_NAME] );
+
+  // Ensure logged in
+  if ( !currentUser ) {
+    res.redirect('/signup');
+    return;
+  }
+
+  // validate csrf state
+  if ( currentSession.stripeConnectCSRFState !== state ) {
+    console.error('Invalid stripeConnectCSRFState'); // eslint-disable-line no-console
+    res.redirect('/subscribe');
+    return;
+  }
+
+  const response = await superagent
+    .post(process.env.STRIPE_CONNECT_TOKEN_URL)
+    .send({
+      grant_type: 'authorization_code',
+      client_id: process.env.STRIPE_CONNECT_CLIENT_ID,
+      client_secret: process.env.STRIPE_API_SECRET,
+      code: code,
+    });
+
+  currentUser.stripe_connect_user_id = response.body.stripe_user_id;
+  await currentUser.save();
+
+  // Redirect to subscribe page
+  res.redirect('/subscribe');
+});
 
 
 export const platformSubscribe = handleAsyncError( async ( req, res ) => {

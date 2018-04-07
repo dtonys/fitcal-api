@@ -171,7 +171,7 @@ export const verifyEmail = handleAsyncError( async ( req, res ) => {
     currentSession,
   } = await getCurrentSessionAndUser( decodedSessionToken );
   if ( !currentUser || !currentSession ) {
-    console.log('User not found or invalid session');
+    console.log('User not found or invalid session'); // eslint-disable-line
     res.redirect(process.env.WEB_SERVER_BASE + '/');
     return;
   }

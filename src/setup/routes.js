@@ -41,8 +41,6 @@ router.use('/api/admin', adminOnly);
 // User profile
 router.post('/api/user/profile', userController.updateProfile );
 router.post('/api/user/avatar', userController.updateAvatar );
-router.get('/api/transactions', userController.getTransactions );
-router.get('/api/stripe/connect', userController.stripeConnect );
 
 // Auth APIs
 router.post('/api/signup', authController.signup );
@@ -61,6 +59,11 @@ router.get('/api/handled-sync-error', errorsController.handledSyncError);
 router.get('/api/handled-async-error', errorsController.handledAsyncError);
 router.get('/api/unhandled-exception', errorsController.unhandledException);
 router.get('/api/unhandled-rejection', errorsController.unhandledRejection);
+
+// Stripe connect endpoints
+router.get('/api/stripe/connect', membershipController.stripeConnect);
+router.get('/api/stripe/token', membershipController.stripeConnectAuthorize);
+
 
 // Stripe webhook endpoint
 router.post(
