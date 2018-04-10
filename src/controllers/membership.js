@@ -176,8 +176,40 @@ export const create = handleAsyncError( async ( req, res ) => {
 });
 
 export const update = handleAsyncError( async ( req, res ) => {
+  const currentUser = await getCurrentUser( req );
+  const { id } = req.params;
+  const {
+    name, description,
+  } = req.body;
+
+  // validate membership exists
+  const membership = await Membership.findById(id);
+  if (!membership) {
+    res.status(404);
+    res.json({
+      error: {
+        message: 'Membership not found',
+      },
+    });
+    return;
+  }
+
+  // Update the stripe record
+  await stripe.products.update( membership.stripe_product_id, {
+    name,
+  }, {
+    stripe_account: currentUser.stripe_connect_token.stripe_user_id,
+  });
+
+  // Update the record
+  membership.set({
+    name,
+    description,
+  });
+  await membership.save();
+
   res.json({
-    name: 'membership: update',
+    data: null,
   });
 });
 
