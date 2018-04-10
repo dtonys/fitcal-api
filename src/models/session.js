@@ -84,7 +84,7 @@ export async function loggedInOnly( req, res, next ) {
   }
   res.status(401);
   res.json({
-    error: 'Unauthorized access',
+    error: 'Unauthorized access: User must be logged in.',
   });
 }
 
@@ -97,7 +97,7 @@ export async function connectedOnly( req, res, next ) {
   }
   res.status(401);
   res.json({
-    error: 'Unauthorized access',
+    error: 'Unauthorized access: User must be connected to the platform.',
   });
 }
 
@@ -114,7 +114,7 @@ export function requireRoles( roles ) {
     res.status(401);
     res.json({
       error: {
-        message: 'Unauthorized access',
+        message: 'Unauthorized access: User does not have requried roles.',
       },
     });
   }

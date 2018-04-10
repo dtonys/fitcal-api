@@ -148,32 +148,26 @@ export const create = handleAsyncError( async ( req, res ) => {
     price_cents, name, description,
   } = req.body;
 
-  console.log('price_cents, name, description');
-  console.log(price_cents, name, description);
-
-  // Create stripe plan and product, authorized as user
-  // const plan = await stripe.plans.create({
-  //   amount: price_cents,
-  //   interval: 'month',
-  //   product: {
-  //     name,
-  //     type: 'service',
-  //   },
-  // }, {
-  //   stripe_account: currentUser.stripe_connect_token.stripe_user_id,
-  // });
-
-  // console.log('plan');
-  // console.log(plan);
+  // Create stripe plan and product, authorized as connected user
+  const plan = await stripe.plans.create({
+    amount: price_cents,
+    currency: 'USD',
+    interval: 'month',
+    product: {
+      name,
+    },
+  }, {
+    stripe_account: currentUser.stripe_connect_token.stripe_user_id,
+  });
 
   // Create Membership Record
   const membership = await Membership.create({
     name,
     description,
-    price: price_cents,
+    price_cents,
     created_by: currentUser._id,
-    // stripe_plan_id: plan.id,
-    // stripe_product_id: plan.product,
+    stripe_plan_id: plan.id,
+    stripe_product_id: plan.product,
   });
 
   res.json({
