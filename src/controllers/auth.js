@@ -154,7 +154,10 @@ export const sessionInfo = handleAsyncError( async ( req, res ) => {
     return;
   }
   const _currentUser = currentUser.toObject();
+  // remove sensitive data
   delete _currentUser.password_hash;
+  delete _currentUser.stripe_connect_token;
+
   res.json({
     data: {
       currentUser: _currentUser,

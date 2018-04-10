@@ -7,6 +7,7 @@ import {
   getCurrentSessionAndUser,
   getCurrentUser,
 } from 'models/session';
+import Membership from 'models/membership';
 const stripe = require('stripe')(process.env.STRIPE_API_SECRET);
 
 
@@ -68,6 +69,7 @@ export const stripeConnectAuthorize = handleAsyncError( async ( req, res ) => {
     stripe_publishable_key,
     stripe_user_id,
   };
+  currentUser.connected = true;
   await currentUser.save();
 
   // Redirect to subscribe page
@@ -141,8 +143,41 @@ export const updatePaymentMethod = handleAsyncError( async ( req, res ) => {
 });
 
 export const create = handleAsyncError( async ( req, res ) => {
+  const currentUser = await getCurrentUser( req );
+  const {
+    price_cents, name, description,
+  } = req.body;
+
+  console.log('price_cents, name, description');
+  console.log(price_cents, name, description);
+
+  // Create stripe plan and product, authorized as user
+  // const plan = await stripe.plans.create({
+  //   amount: price_cents,
+  //   interval: 'month',
+  //   product: {
+  //     name,
+  //     type: 'service',
+  //   },
+  // }, {
+  //   stripe_account: currentUser.stripe_connect_token.stripe_user_id,
+  // });
+
+  // console.log('plan');
+  // console.log(plan);
+
+  // Create Membership Record
+  const membership = await Membership.create({
+    name,
+    description,
+    price: price_cents,
+    created_by: currentUser._id,
+    // stripe_plan_id: plan.id,
+    // stripe_product_id: plan.product,
+  });
+
   res.json({
-    name: 'membership: create',
+    data: membership,
   });
 });
 
@@ -159,8 +194,14 @@ export const remove = handleAsyncError( async ( req, res ) => {
 });
 
 export const myMemberships = handleAsyncError( async ( req, res ) => {
+  const currentUser = await getCurrentUser( req );
+
+  const memberships = await Membership
+    .find({ created_by: currentUser._id })
+    .lean();
+
   res.json({
-    name: 'membership: myMemberships',
+    data: { items: memberships },
   });
 });
 
@@ -170,7 +211,13 @@ export const mySubscriptions = handleAsyncError( async ( req, res ) => {
   });
 });
 
-export const subscribe = handleAsyncError( async ( req, res ) => {
+export const membershipSubscribe = handleAsyncError( async ( req, res ) => {
+  res.json({
+    name: 'membership: subscribe',
+  });
+});
+
+export const membershipUnSubscribe = handleAsyncError( async ( req, res ) => {
   res.json({
     name: 'membership: subscribe',
   });

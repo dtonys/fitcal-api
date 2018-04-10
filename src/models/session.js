@@ -18,7 +18,7 @@ const SessionSchema = new Schema({
   createdAt: { type: Date, expires: SESSION_DURATION_SECONDS, default: Date.now },
   stripeConnectCSRFState: String,
 });
-const Session  = mongoose.model('session', SessionSchema);
+const Session = mongoose.model('session', SessionSchema);
 export default Session;
 
 export async function getCurrentUser( req ) {
@@ -76,8 +76,21 @@ export async function createSessionWithCookie( userId, req, res ) {
 }
 
 export async function loggedInOnly( req, res, next ) {
-  const { currentUser } = await getCurrentSessionAndUser( req.cookies[SESSION_COOKIE_NAME] );
+  const currentUser = await getCurrentUser( req );
   if ( currentUser ) {
+    req.currentUser = currentUser;
+    next();
+    return;
+  }
+  res.status(401);
+  res.json({
+    error: 'Unauthorized access',
+  });
+}
+
+export async function connectedOnly( req, res, next ) {
+  const currentUser = await getCurrentUser( req );
+  if ( currentUser && currentUser.connected ) {
     req.currentUser = currentUser;
     next();
     return;
@@ -90,7 +103,7 @@ export async function loggedInOnly( req, res, next ) {
 
 export function requireRoles( roles ) {
   async function requireRolesMiddleware( req, res, next ) {
-    const { currentUser } = await getCurrentSessionAndUser( req.cookies[SESSION_COOKIE_NAME] );
+    const currentUser = await getCurrentUser( req );
     const userRoles = lodashGet( currentUser, 'roles' );
     const hasRequiredRoles = userRoles && lodashDifference(roles, userRoles).length === 0;
     if ( hasRequiredRoles ) {

@@ -28,6 +28,7 @@ const UserSchema = new Schema({
   // stripe
   stripe_customer_id: String,
   stripe_connect_token: StripeConnectToken,
+  connected: Boolean,
 }, options);
 
 const User = mongoose.model('user', UserSchema);
