@@ -76,9 +76,19 @@ export const update = handleAsyncError( async ( req, res ) => {
 
 export const remove = handleAsyncError( async ( req, res ) => {
   const { id } = req.params;
-  const deletedEvent = await Event.findOneAndRemove({ _id: id });
+
+  const event = await Event.findOne({ _id: id });
+  if ( !event ) {
+    res.status(404);
+    res.json({
+      error: { message: 'User not found' },
+    });
+  }
+
+  await event.remove();
+
   res.json({
-    data: deletedEvent,
+    data: event,
   });
 });
 

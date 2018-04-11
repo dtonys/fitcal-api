@@ -214,8 +214,24 @@ export const update = handleAsyncError( async ( req, res ) => {
 });
 
 export const remove = handleAsyncError( async ( req, res ) => {
+  const { id } = req.params;
+  const currentUser = await getCurrentUser( req );
+
+  const membership = await Membership.findOne({ _id: id });
+  // Delete the stripe plan
+  await stripe.plans.del(membership.stripe_plan_id, {
+    stripe_account: currentUser.stripe_connect_token.stripe_user_id,
+  });
+  // Delete the stripe product
+  await stripe.products.del(membership.stripe_product_id, {
+    stripe_account: currentUser.stripe_connect_token.stripe_user_id,
+  });
+
+  // Delete the record
+  await membership.remove();
+
   res.json({
-    name: 'membership: remove',
+    data: membership,
   });
 });
 
