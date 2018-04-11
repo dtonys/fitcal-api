@@ -64,6 +64,7 @@ router.get('/api/unhandled-rejection', errorsController.unhandledRejection);
 // Stripe connect endpoints
 router.get('/api/stripe/connect', membershipController.stripeConnect);
 router.get('/api/stripe/token', membershipController.stripeConnectAuthorize);
+router.get('/api/stripe/express-dashboard', membershipController.expressDashboardRedirect);
 
 
 // Stripe webhook endpoint

@@ -76,6 +76,11 @@ export const stripeConnectAuthorize = handleAsyncError( async ( req, res ) => {
   res.redirect('/subscribe');
 });
 
+export const expressDashboardRedirect = handleAsyncError( async ( req, res ) => {
+  const currentUser = await getCurrentUser( req );
+  const response = await stripe.accounts.createLoginLink( currentUser.stripe_connect_token.stripe_user_id );
+  res.redirect(response.url);
+});
 
 export const platformSubscribe = handleAsyncError( async ( req, res ) => {
   const { token } = req.body;
