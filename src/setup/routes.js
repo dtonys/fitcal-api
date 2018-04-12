@@ -75,16 +75,6 @@ router.post(
 );
 
 // Subscriptions, payments
-router.post(
-  '/api/platform/subscribe',
-  loggedInOnly,
-  membershipController.platformSubscribe,
-);
-router.post(
-  '/api/platform/unsubscribe',
-  loggedInOnly,
-  membershipController.platformUnSubscribe,
-);
 router.get('/api/payment/method', membershipController.getPaymentMethod);
 router.post('/api/payment/method/update', membershipController.updatePaymentMethod);
 

@@ -1,6 +1,5 @@
 import superagent from 'superagent';
 import { handleAsyncError } from 'helpers/express';
-import Subscription, { subscribeToPlatform } from 'models/subscription';
 import querystring from 'querystring';
 import {
   SESSION_COOKIE_NAME,
@@ -80,29 +79,6 @@ export const expressDashboardRedirect = handleAsyncError( async ( req, res ) => 
   const currentUser = await getCurrentUser( req );
   const response = await stripe.accounts.createLoginLink( currentUser.stripe_connect_token.stripe_user_id );
   res.redirect(response.url);
-});
-
-export const platformSubscribe = handleAsyncError( async ( req, res ) => {
-  const { token } = req.body;
-  // get current user
-  const currentUser = await getCurrentUser( req );
-  const subscription = await subscribeToPlatform( currentUser, token );
-
-  res.json({
-    data: subscription,
-  });
-});
-
-export const platformUnSubscribe = handleAsyncError( async ( req, res ) => {
-  // get current user
-  const currentUser = await getCurrentUser( req );
-  const subscription = await Subscription.findOne({
-    user: currentUser._id,
-  });
-  await subscription.cancelPlatformSubscription();
-  res.json({
-    data: null,
-  });
 });
 
 export const getPaymentMethod = handleAsyncError( async ( req, res ) => {

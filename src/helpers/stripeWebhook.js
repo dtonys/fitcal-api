@@ -3,10 +3,12 @@ const stripe = require('stripe')(process.env.STRIPE_API_SECRET);
 
 export const STRIPE_WEBHOOK_ENDPOINT = '/api/stripe/webhook';
 export const WEBHOOK_EVENT_TYPES = [
-  'customer.subscription.created',
-  'customer.subscription.updated',
-  'customer.subscription.deleted',
-  'invoice.payment_succeeded',
+  // 'customer.subscription.created',
+  // 'customer.subscription.updated',
+  // 'customer.subscription.deleted',
+  // 'invoice.payment_succeeded',
+  // Connected user disconnects from service
+  'account.application.deauthorized',
 ];
 
 export function verifyStripeSignature( req, res, next ) { // eslint-disable-line

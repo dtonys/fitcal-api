@@ -22,7 +22,6 @@ const UserSchema = new Schema({
   phone: String,
   password_hash: String,
   roles: [ String ],
-  subscribed: Boolean,
   reset_password_token: String,
   is_email_verified: Boolean,
   // stripe
