@@ -75,6 +75,30 @@ export const stripeConnectAuthorize = handleAsyncError( async ( req, res ) => {
   res.redirect('/subscribe');
 });
 
+export const stripeDisconnect = handleAsyncError( async ( req, res ) => {
+  const currentUser = await getCurrentUser( req );
+
+  // disconnect from stripe
+  await superagent
+    .post(process.env.STRIPE_CONNECT_DEAUTHORIZE_URL)
+    .send({
+      client_id: process.env.STRIPE_CONNECT_CLIENT_ID,
+      client_secret: process.env.STRIPE_API_SECRET,
+      stripe_user_id: currentUser.stripe_connect_token.stripe_user_id,
+    });
+
+  // Update the user record
+  currentUser.set({
+    stripe_connect_token: null,
+    connected: false,
+  });
+  await currentUser.save();
+
+  res.json({
+    data: null,
+  });
+});
+
 export const expressDashboardRedirect = handleAsyncError( async ( req, res ) => {
   const currentUser = await getCurrentUser( req );
   const response = await stripe.accounts.createLoginLink( currentUser.stripe_connect_token.stripe_user_id );
