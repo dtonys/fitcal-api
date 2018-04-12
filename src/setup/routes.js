@@ -78,12 +78,12 @@ router.post(
 router.get('/api/payment/method', membershipController.getPaymentMethod);
 router.post('/api/payment/method/update', membershipController.updatePaymentMethod);
 
-// CRUD memberships
+// Membership APIs
 router.post('/api/memberships', connectedOnly, membershipController.create);
 router.patch('/api/memberships/:id', connectedOnly, membershipController.update );
 router.delete('/api/memberships/:id', connectedOnly, membershipController.remove );
-
 router.get('/api/memberships', membershipController.myMemberships );
+// TODO
 router.post('/api/memberships/:id/subscribe', membershipController.membershipSubscribe );
 router.post('/api/memberships/:id/unsubscribe', membershipController.membershipUnSubscribe );
 router.get('/api/subscriptions', membershipController.mySubscriptions );
