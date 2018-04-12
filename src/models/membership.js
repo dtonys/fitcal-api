@@ -19,6 +19,15 @@ const MembershipSchema = new Schema({
 const Membership = mongoose.model('membership', MembershipSchema);
 export default Membership;
 
+export function canJoinMembership( membership, user ) {
+  const currentUserId = user._id.toString();
+  const owned = ( membership.created_by.toString() === currentUserId );
+  // TODO: Update with real logic
+  const joined = false;
+  const can_join = ( !owned && !joined );
+  return can_join;
+}
+
 export async function cancelMembership( user, token ) {
   // TODO
 }

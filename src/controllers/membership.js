@@ -6,7 +6,10 @@ import {
   getCurrentSessionAndUser,
   getCurrentUser,
 } from 'models/session';
-import Membership from 'models/membership';
+import Membership, {
+  canJoinMembership,
+} from 'models/membership';
+import User from 'models/user';
 const stripe = require('stripe')(process.env.STRIPE_API_SECRET);
 
 
@@ -246,6 +249,35 @@ export const myMemberships = handleAsyncError( async ( req, res ) => {
   const memberships = await Membership
     .find({ created_by: currentUser._id })
     .lean();
+
+  res.json({
+    data: { items: memberships },
+  });
+});
+
+export const getUserMemberships = handleAsyncError( async ( req, res ) => {
+  const { username } = req.params;
+  const currentUser = await getCurrentUser( req );
+  const targetUser = await User.find({ username });
+
+  if ( !targetUser ) {
+    res.status(404);
+    res.json({
+      error: { message: 'User not found' },
+    });
+    return;
+  }
+
+  const memberships = await Membership
+    .find({ created_by: targetUser })
+    .lean(); // NOTE: use `lean` for read only queries, faster and no need to convert to JSON.
+
+  // TODO: Compute can_join, user can join event if he is not creater and is not already joined
+  memberships.forEach((membership) => {
+    // HACK: If user is logged out, set can_join to true to enable button
+    // which will redirect to signup.
+    membership.can_join = currentUser ? canJoinMembership(membership, currentUser) : true;
+  });
 
   res.json({
     data: { items: memberships },

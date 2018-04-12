@@ -158,7 +158,9 @@ export const userEventList = handleAsyncError( async ( req, res ) => {
 
   // Compute can_join
   userEvents.forEach((event) => {
-    event.can_join = canJoinEvent(event, currentUser);
+    // HACK: If user is logged out, set can_join to true to enable button
+    // which will redirect to signup.
+    event.can_join = currentUser ? canJoinEvent(event, currentUser) : true;
   });
 
   res.json({
