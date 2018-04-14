@@ -52,7 +52,7 @@ import { WEBHOOK_EVENT_TYPES } from 'helpers/stripeWebhook';
 export const stripeWebhook = handleAsyncError( async ( req, res ) => { // eslint-disable-line
   const event = req.stripeWebhookEvent;
 
-  console.log('JSON.stringify(event)');
+  console.log('webhook event: JSON.stringify(event)');
   console.log(JSON.stringify(event));
 
   // Do not process test events in production

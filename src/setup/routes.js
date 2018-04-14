@@ -87,9 +87,9 @@ router.get('/api/memberships', membershipController.myMemberships );
 // TODO
 router.get('/api/:username/memberships', membershipController.getUserMemberships );
 
-router.post('/api/memberships/:id/subscribe', membershipController.membershipSubscribe );
-router.post('/api/memberships/:id/unsubscribe', membershipController.membershipUnSubscribe );
-router.get('/api/subscriptions', membershipController.mySubscriptions );
+router.post('/api/memberships/:id/subscribe', loggedInOnly, membershipController.membershipSubscribe );
+router.post('/api/memberships/:id/unsubscribe', loggedInOnly, membershipController.membershipUnSubscribe );
+router.get('/api/subscriptions', loggedInOnly, membershipController.mySubscriptions );
 
 // CRUD events ( any user )
 router.post('/api/events', loggedInOnly, eventController.create);

@@ -19,6 +19,8 @@ export function verifyStripeSignature( req, res, next ) { // eslint-disable-line
     next();
   }
   catch (err) {
+    console.log('verifyStripeSignature failed');
+    console.log(err);
     res.status(400).end();
   }
 }

@@ -7,6 +7,11 @@ const StripeConnectToken = new Schema({
   stripe_user_id: String,
 });
 
+const CustomerReference = new Schema({
+  instructor_user_id: { type: Schema.Types.ObjectId, ref: 'user' },
+  stripe_customer_id: String,
+});
+
 const options = {
   timestamps: true,
 };
@@ -28,6 +33,8 @@ const UserSchema = new Schema({
   stripe_customer_id: String,
   stripe_connect_token: StripeConnectToken,
   connected: Boolean,
+  stripe_customer_references: [ CustomerReference ],
+  subscribed_memberships: { type: [ { type: Schema.Types.ObjectId, ref: 'membership' } ] },
 }, options);
 
 const User = mongoose.model('user', UserSchema);
