@@ -331,7 +331,7 @@ export const membershipSubscribe = handleAsyncError( async ( req, res ) => {
     return;
   }
 
-  // validate user is not already subscribed to membership
+  // TODO: validate user is not already subscribed to membership
   // if ( currentUser.subscribed_memberships )
 
   const membershipCreatorId = membershipCreator._id.toString();
@@ -346,6 +346,7 @@ export const membershipSubscribe = handleAsyncError( async ( req, res ) => {
     console.log('platformCustomer created');
     console.log(platformCustomer);
     currentUser.stripe_customer_id = platformCustomer.id;
+    await currentUser.save();
   }
 
   // check user map to see if user is already a customer of the instructor who owns this membership.
@@ -378,7 +379,7 @@ export const membershipSubscribe = handleAsyncError( async ( req, res ) => {
     instructorCustomerId = instructorCustomer.id;
 
     // Update user record, add the created customer id to an array within user object
-    currentUser.update({
+    await currentUser.update({
       $addToSet: {
         stripe_customer_references: {
           instructor_user_id: membershipCreator._id,
@@ -412,13 +413,11 @@ export const membershipSubscribe = handleAsyncError( async ( req, res ) => {
   console.log(membershipSubscription);
 
   // update user record, add to list of subscribed memberships
-  currentUser.update({
+  await currentUser.update({
     $addToSet: {
       subscribed_memberships: membership._id,
     },
   });
-  await currentUser.save();
-
   // subscribed_memberships
   // TODO: send emails, `clientSubscriptionConfirmation`, `instructorSubscriptionConfirmation`
   // to indicate the subscription was finalized
@@ -430,7 +429,55 @@ export const membershipSubscribe = handleAsyncError( async ( req, res ) => {
 });
 
 export const membershipUnSubscribe = handleAsyncError( async ( req, res ) => {
+  const { id } = req.params;
+  const currentUser = await getCurrentUser( req );
+
+  const membership = await Membership
+    .findOne({ _id: id })
+    .populate('created_by');
+
+  if (!membership) {
+    res.status(404);
+    res.json({
+      error: { message: 'Membership not found' },
+    });
+    return;
+  }
+  const membershipCreatorStripeAccountId = membership.created_by.stripe_connect_token.stripe_user_id;
+
+  // validate subscriptions exists
+  const subscription = await MembershipSubscription
+    .findOne({ user: currentUser });
+
+  if ( !subscription ) {
+    res.status(404);
+    res.json({
+      error: { message: 'Subscription not found' },
+    });
+    return;
+  }
+
+  // cancel the stripe subscription, for connected account
+  await stripe.subscriptions.del(
+    subscription.stripe_subscription_id,
+    {
+      stripe_account: membershipCreatorStripeAccountId,
+    }
+  );
+
+  // remove the record
+  await subscription.remove();
+
+  // remove the subscription reference from the user record
+  await currentUser.update({
+    $pull: {
+      subscribed_memberships: membership._id,
+    },
+  });
+
+  // TODO: Remove all currentUser's events connected to this membership
+
   res.json({
-    name: 'membership: subscribe',
+    data: subscription,
   });
 });
