@@ -288,8 +288,15 @@ export const getUserMemberships = handleAsyncError( async ( req, res ) => {
 });
 
 export const mySubscriptions = handleAsyncError( async ( req, res ) => {
+  const currentUser = await getCurrentUser( req );
+  const subscriptions = await MembershipSubscription
+    .find({ user: currentUser })
+    .populate('membership');
+
+  const subscribedMemberships = subscriptions.map((sub) => sub.membership);
+
   res.json({
-    name: 'membership: mySubscriptions',
+    data: subscribedMemberships,
   });
 });
 
