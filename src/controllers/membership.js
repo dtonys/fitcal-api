@@ -272,18 +272,19 @@ export const getUserMemberships = handleAsyncError( async ( req, res ) => {
   }
 
   const memberships = await Membership
-    .find({ created_by: targetUser })
-    .lean(); // NOTE: use `lean` for read only queries, faster and no need to convert to JSON.
+    .find({ created_by: targetUser });
 
-  // TODO: Compute can_join, user can join event if he is not creater and is not already joined
-  memberships.forEach((membership) => {
+  // Compute can_join for each membership
+  const membershipsJSON = memberships.map(( membership ) => {
     // HACK: If user is logged out, set can_join to true to enable button
     // which will redirect to signup.
-    membership.can_join = currentUser ? canJoinMembership(membership, currentUser) : true;
+    const membershipJSON = membership.toJSON();
+    membershipJSON.can_join = currentUser ? canJoinMembership(membership, currentUser) : true;
+    return membershipJSON;
   });
 
   res.json({
-    data: { items: memberships },
+    data: { items: membershipsJSON },
   });
 });
 
@@ -314,7 +315,7 @@ export const membershipSubscribe = handleAsyncError( async ( req, res ) => {
     return;
   }
   const membershipCreator = await User.findOne({ _id: membership.created_by });
-  // validate connected
+  // validate membership creator is connected
   if (!membershipCreator.connected) {
     res.status(422);
     res.json({
@@ -330,9 +331,17 @@ export const membershipSubscribe = handleAsyncError( async ( req, res ) => {
     });
     return;
   }
-
-  // TODO: validate user is not already subscribed to membership
-  // if ( currentUser.subscribed_memberships )
+  // validate user is not already subscribed to membership
+  const joined = currentUser.subscribed_memberships.some((joinedMembership) => {
+    return joinedMembership.equals( membership._id );
+  });
+  if ( joined ) {
+    res.status(422);
+    res.json({
+      error: { message: 'You are already subscribed to this membership.' },
+    });
+    return;
+  }
 
   const membershipCreatorId = membershipCreator._id.toString();
   const membershipCreatorStripeAccountId =  membershipCreator.stripe_connect_token.stripe_user_id;
@@ -395,6 +404,7 @@ export const membershipSubscribe = handleAsyncError( async ( req, res ) => {
   const stripeSubscription = await stripe.subscriptions.create({
     customer: instructorCustomerId,
     items: [ { plan: membership.stripe_plan_id } ],
+    application_fee_percent: 10,
   }, {
     stripe_account: membershipCreatorStripeAccountId,
   });

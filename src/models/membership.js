@@ -20,10 +20,10 @@ const Membership = mongoose.model('membership', MembershipSchema);
 export default Membership;
 
 export function canJoinMembership( membership, user ) {
-  const owned = ( membership.created_by.toString() === user._id.toString() );
-  const joined = Boolean(user.subscribed_memberships.filter((sub) => {
-    return sub.toString() === membership._id.toString();
-  }).length);
+  const owned = ( membership.created_by.equals(user._id) );
+  const joined = user.subscribed_memberships.some((joinedMembership) => {
+    return joinedMembership.equals(membership._id);
+  });
   const can_join = ( !owned && !joined );
   return can_join;
 }

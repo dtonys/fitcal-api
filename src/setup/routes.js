@@ -7,6 +7,7 @@ import * as errorsController from 'controllers/errorExamples';
 import {
   verifyStripeSignature,
   STRIPE_WEBHOOK_ENDPOINT,
+  STRIPE_CONNECT_WEBHOOK_ENDPOINT,
 } from 'helpers/stripeWebhook';
 import { stripeWebhook } from 'controllers/webhook';
 
@@ -68,9 +69,23 @@ router.post('/api/stripe/disconnect', connectedOnly, membershipController.stripe
 router.get('/api/stripe/express-dashboard', membershipController.expressDashboardRedirect);
 
 
+function setWebhookSecretMiddleware( secret ) {
+  return (req, res, next) => {
+    req.stripeWebhookSecret = secret;
+    next();
+  };
+}
 // Stripe webhook endpoint
 router.post(
   STRIPE_WEBHOOK_ENDPOINT,
+  setWebhookSecretMiddleware(process.env.STRIPE_WEBHOOK_SECRET),
+  verifyStripeSignature,
+  stripeWebhook
+);
+// Connect applications have separate webhook endpoint
+router.post(
+  STRIPE_CONNECT_WEBHOOK_ENDPOINT,
+  setWebhookSecretMiddleware(process.env.STRIPE_CONNECT_WEBHOOK_SECRET),
   verifyStripeSignature,
   stripeWebhook
 );
