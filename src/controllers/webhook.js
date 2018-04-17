@@ -53,8 +53,6 @@ export const stripeWebhook = handleAsyncError( async ( req, res ) => { // eslint
   const event = req.stripeWebhookEvent;
 
   console.log(`webhook event: ${event.type}`);
-  console.log(JSON.stringify(event));
-
   // Do not process test events in production
   if ( process.env.NODE_ENV === 'production' && !event.livemode ) return;
 

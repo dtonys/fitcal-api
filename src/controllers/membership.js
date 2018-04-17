@@ -294,10 +294,10 @@ export const mySubscriptions = handleAsyncError( async ( req, res ) => {
     .find({ user: currentUser })
     .populate('membership');
 
-  const subscribedMemberships = subscriptions.map((sub) => sub.membership);
+  // const subscribedMemberships = subscriptions.map((sub) => sub.membership);
 
   res.json({
-    data: subscribedMemberships,
+    data: subscriptions,
   });
 });
 
@@ -442,23 +442,10 @@ export const membershipUnSubscribe = handleAsyncError( async ( req, res ) => {
   const { id } = req.params;
   const currentUser = await getCurrentUser( req );
 
-  const membership = await Membership
-    .findOne({ _id: id })
-    .populate('created_by');
-
-  if (!membership) {
-    res.status(404);
-    res.json({
-      error: { message: 'Membership not found' },
-    });
-    return;
-  }
-  const membershipCreatorStripeAccountId = membership.created_by.stripe_connect_token.stripe_user_id;
+  const subscription = await MembershipSubscription
+    .findOne({ _id: id });
 
   // validate subscriptions exists
-  const subscription = await MembershipSubscription
-    .findOne({ user: currentUser });
-
   if ( !subscription ) {
     res.status(404);
     res.json({
@@ -466,27 +453,40 @@ export const membershipUnSubscribe = handleAsyncError( async ( req, res ) => {
     });
     return;
   }
+  // validate subscription belongs to user
+  if ( !subscription.user.equals(currentUser._id) ) {
+    res.status(422);
+    res.json({
+      error: { message: 'This subscription does not belong to you.' },
+    });
+    return;
+  }
 
-  // cancel the stripe subscription, for connected account
+  // get connected membership, and fetch creator user
+  const membership = await Membership
+    .findOne({ _id: subscription.membership })
+    .populate('created_by');
+
+  const membershipCreatorStripeAccountId = membership.created_by.stripe_connect_token.stripe_user_id;
+  // stripe unsubscribe from subscription
   await stripe.subscriptions.del(
     subscription.stripe_subscription_id,
-    {
-      stripe_account: membershipCreatorStripeAccountId,
-    }
+    { stripe_account: membershipCreatorStripeAccountId },
   );
 
-  // remove the record
-  await subscription.remove();
-
-  // remove the subscription reference from the user record
+  // remove subscribed_membership from user record
   await currentUser.update({
     $pull: {
       subscribed_memberships: membership._id,
     },
   });
 
+  // delete the subscription record
+  await subscription.remove();
+
   // TODO: Remove all currentUser's events connected to this membership
 
+  // return the deleted subscription data
   res.json({
     data: subscription,
   });

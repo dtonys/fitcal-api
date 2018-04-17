@@ -103,7 +103,7 @@ router.get('/api/memberships', membershipController.myMemberships );
 router.get('/api/:username/memberships', membershipController.getUserMemberships );
 
 router.post('/api/memberships/:id/subscribe', loggedInOnly, membershipController.membershipSubscribe );
-router.post('/api/memberships/:id/unsubscribe', loggedInOnly, membershipController.membershipUnSubscribe );
+router.post('/api/subscriptions/:id/unsubscribe', loggedInOnly, membershipController.membershipUnSubscribe );
 router.get('/api/subscriptions', loggedInOnly, membershipController.mySubscriptions );
 
 // CRUD events ( any user )
