@@ -147,6 +147,9 @@ export const updatePaymentMethod = handleAsyncError( async ( req, res ) => {
       { source: token },
     );
   }
+
+  // TODO: Update all other customers attatched to this user, via `stripe_customer_references`
+
   res.json({
     data: null,
   });

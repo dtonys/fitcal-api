@@ -1,11 +1,37 @@
 import { handleAsyncError } from 'helpers/express';
 import StripeEvent from 'models/stripe_event';
-// import InvoicePayment from 'models/invoice_payment';
-// import User from 'models/user';
+import InvoicePayment from 'models/invoice_payment';
+import User from 'models/user';
 import slackMessage from 'services/slackMessage';
-import { WEBHOOK_EVENT_TYPES } from 'helpers/stripeWebhook';
 // const stripe = require('stripe')(process.env.STRIPE_API_SECRET);
 
+
+// List all webhook events that we care about
+const WEBHOOK_EVENT_TYPES = [
+  // An invoice payment (subscription) succeeds
+  'invoice.payment_succeeded',
+  // A invoice payment (subscription) fails
+  'invoice.payment_failed',
+
+  // A subscription is created
+  'customer.subscription.created',
+  // A subscription changes, potentially becoming active / inactive
+  'customer.subscription.updated',
+  // A subscription is deleted
+  'customer.subscription.deleted',
+
+  /** Events below are not a result of actions on the platform.
+    They may be triggered via stripe dashboard or another external resource. **/
+
+  // A customer gets deleted
+  'customer.deleted',
+  // A customer's credit card will expire at the end of the month
+  'customer.source.expiring',
+  // A provider disonnects from our platform
+  'account.application.deauthorized',
+  // A payment ( charge or invoice ) was refunded
+  'charge.refunded',
+];
 
 // Update a user's subscription status
 // const syncSubscriptionStatus = async ( event ) => {
@@ -49,6 +75,68 @@ import { WEBHOOK_EVENT_TYPES } from 'helpers/stripeWebhook';
 
 // };
 
+async function syncSubscriptionStatus() {
+  // NOT_EMPTY
+}
+
+async function removeSubscription() {
+  // NOT_EMPTY
+}
+
+async function removeCustomer() {
+  // NOT_EMPTY
+}
+
+async function disconnectUser() {
+  // NOT_EMPTY
+}
+
+async function handleInvoicePaymentSuccess(  ) {
+  console.log('handleInvoicePaymentSuccess');
+  // TODO: Send email if needed
+}
+
+async function handleInvoicePaymentFailed(  ) {
+  console.log('handleInvoicePaymentFailed');
+  // TODO: Send email if needed
+}
+
+async function handleSubscriptionCreated(  ) {
+  console.log('handleSubscriptionCreated');
+  // TODO: Send email if needed
+}
+
+async function handleSubscriptionUpdated(  ) {
+  console.log('handleSubscriptionUpdated');
+  // TODO: Send email if needed
+  syncSubscriptionStatus();
+}
+
+async function handleSubscriptionDeleted(  ) {
+  console.log('handleSubscriptionDeleted');
+  removeSubscription();
+}
+
+async function handleCustomerDeleted(  ) {
+  console.log('handleCustomerDeleted');
+  removeCustomer();
+}
+
+async function handleCustomerSourceExpiring(  ) {
+  console.log('handleCustomerSourceExpiring');
+  // TODO: Send email if needed
+}
+
+async function handleUserDisconnect(  ) {
+  console.log('handleUserDisconnect');
+  disconnectUser();
+}
+
+async function handleChargeRefund(  ) {
+  console.log('handleChargeRefund');
+  // TODO: Send email if needed
+}
+
 export const stripeWebhook = handleAsyncError( async ( req, res ) => { // eslint-disable-line
   const event = req.stripeWebhookEvent;
 
@@ -59,20 +147,57 @@ export const stripeWebhook = handleAsyncError( async ( req, res ) => { // eslint
   // relay webhook event to slack
   slackMessage( `${event.type} - https://dashboard.stripe.com/test/events/${event.id}`);
 
-  // return 200 if webhook event is not a type we care about
-  if ( WEBHOOK_EVENT_TYPES.indexOf( event.type ) === -1 ) {
+  // return 200 and do nothing further, if webhook event is not a type we care about
+  if ( !WEBHOOK_EVENT_TYPES.includes( event.type ) ) {
     res.sendStatus(200);
     return;
   }
 
+  // TODO: UNDO
   // Do not process the same event more than once
-  const exists = await StripeEvent.count({ _id: event.id });
-  if ( exists ) {
-    res.sendStatus(200);
-    return;
-  }
+  // const exists = await StripeEvent.count({ _id: event.id });
+  // if ( exists ) {
+  //   res.sendStatus(200);
+  //   return;
+  // }
 
   /* Process webhooks, based on type */
+
+  // if event payload contains `account`, this is a connect event, so load that provider user
+  if ( event.account ) {
+    const instructor = await User.findOne({
+      'stripe_connect_token.stripe_user_id': event.account,
+    });
+
+    if ( event.type === 'invoice.payment_succeeded' ) {
+      await handleInvoicePaymentSuccess( instructor );
+    }
+    if ( event.type === 'invoice.payment_failed' ) {
+      await handleInvoicePaymentFailed( instructor );
+    }
+    if ( event.type === 'customer.subscription.created' ) {
+      await handleSubscriptionCreated( instructor );
+    }
+    if ( event.type === 'customer.subscription.updated' ) {
+      await handleSubscriptionUpdated( instructor );
+    }
+    if ( event.type === 'customer.subscription.deleted' ) {
+      await handleSubscriptionDeleted( instructor );
+    }
+    if ( event.type === 'customer.deleted' ) {
+      await handleCustomerDeleted( instructor );
+    }
+    if ( event.type === 'customer.source.expiring' ) {
+      await handleCustomerSourceExpiring( instructor );
+    }
+    if ( event.type === 'account.application.deauthorized' ) {
+      await handleUserDisconnect( instructor );
+    }
+    if ( event.type === 'charge.refunded' ) {
+      await handleChargeRefund( instructor );
+    }
+  }
+
   // Update subscription status whenever it changes
   // console.log('Processing: ' + event.type); // eslint-disable-line
   // if (
@@ -87,8 +212,8 @@ export const stripeWebhook = handleAsyncError( async ( req, res ) => { // eslint
   //   createInvoiceRecord(event);
   // }
 
-  // Create the resource after operations are successful
-  await StripeEvent.create({ _id: event.id });
+  // Create the resource after operations are successful ( TODO: UNDO )
+  // await StripeEvent.create({ _id: event.id });
 
   // Always return 200 success response
   res.sendStatus(200);

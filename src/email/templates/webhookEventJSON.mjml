@@ -1,0 +1,62 @@
+<mjml>
+  <mj-head>
+    <mj-title>Reset Password</mj-title>
+    <mj-preview>
+      Webhook Event - ${data.eventType}
+      <mj-include path="./src/server/email/templates/previewSpacer.mjml" />
+    </mj-preview>
+  </mj-head>
+  <mj-body>
+    <mj-container>
+      <!-- Header with logo -->
+      <mj-section
+        background-color="#f5f5f5"
+        border-bottom="solid black 3px"
+      >
+        <mj-group>
+          <mj-column
+            width="60%"
+          >
+            <mj-text
+              font-size="20px"
+              line-height="0"
+              align="center"
+            >Webhook</mj-text>
+            <mj-text
+              font-size="20px"
+              line-height="35px"
+              align="center"
+            >Event</mj-text>
+          </mj-column>
+          <mj-column
+            width="40%"
+          >
+            <mj-image
+              padding="10"
+              width="50"
+              src="http://via.placeholder.com/200x200"
+            />
+          </mj-column>
+        </mj-group>
+
+      </mj-section>
+      <!-- Text Content -->
+      <mj-section
+        background-color="#ffffff"
+        border-bottom="solid black 3px"
+      >
+        <mj-column>
+          <mj-text>
+            Hey ${data.first_name},
+          </mj-text>
+          <mj-text>
+            ${data.eventType}
+          </mj-text>
+          <mj-text>
+            ${data.eventJSONString},
+          </mj-text>
+        </mj-column>
+      </mj-section>
+    </mj-container>
+  </mj-body>
+</mjml>
