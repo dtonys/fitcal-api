@@ -15,7 +15,7 @@ function getEventData( body ) {
     end_date: new Date(body.end),
     recurring_type: body.repeats,
     max_clients: parseInt(body.capacity, 10),
-    price_cents: parseInt(body.price_cents, 10),
+    price_cents: body.price_cents ? parseInt(body.price_cents, 10) : null,
   };
 }
 

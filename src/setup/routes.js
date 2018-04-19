@@ -80,14 +80,14 @@ router.post(
   STRIPE_WEBHOOK_ENDPOINT,
   setWebhookSecretMiddleware(process.env.STRIPE_WEBHOOK_SECRET),
   verifyStripeSignature,
-  stripeWebhook
+  stripeWebhook,
 );
 // Connect applications have separate webhook endpoint
 router.post(
   STRIPE_CONNECT_WEBHOOK_ENDPOINT,
   setWebhookSecretMiddleware(process.env.STRIPE_CONNECT_WEBHOOK_SECRET),
   verifyStripeSignature,
-  stripeWebhook
+  stripeWebhook,
 );
 
 // Subscriptions, payments

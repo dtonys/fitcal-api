@@ -148,7 +148,24 @@ export const updatePaymentMethod = handleAsyncError( async ( req, res ) => {
     );
   }
 
-  // TODO: Update all other customers attatched to this user, via `stripe_customer_references`
+  // Update all payment methods of customers connected to this user
+  for ( const customerRef of currentUser.stripe_customer_references ) {
+    // Get membership creator and his token
+    const membershipCreator = await User.findOne({ // eslint-disable-line
+      _id: customerRef.instructor_user_id,
+    });
+    const membershipCreatorStripeAccountId = membershipCreator.stripe_connect_token.stripe_user_id;
+    // Generate a new token based on platform customer
+    const paymentToken = await stripe.tokens.create( // eslint-disable-line
+      { customer: currentUser.stripe_customer_id },
+      { stripe_account: membershipCreatorStripeAccountId },
+    );
+    await stripe.customers.update( // eslint-disable-line
+      customerRef.stripe_customer_id,
+      { source: paymentToken.id },
+      { stripe_account: membershipCreatorStripeAccountId },
+    );
+  }
 
   res.json({
     data: null,
@@ -347,7 +364,7 @@ export const membershipSubscribe = handleAsyncError( async ( req, res ) => {
   }
 
   const membershipCreatorId = membershipCreator._id.toString();
-  const membershipCreatorStripeAccountId =  membershipCreator.stripe_connect_token.stripe_user_id;
+  const membershipCreatorStripeAccountId = membershipCreator.stripe_connect_token.stripe_user_id;
 
   // if customer does not exist on platform, create it, using token as payment method
   if ( !currentUser.stripe_customer_id ) {

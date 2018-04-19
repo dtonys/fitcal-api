@@ -1,8 +1,12 @@
 import { handleAsyncError } from 'helpers/express';
 import StripeEvent from 'models/stripe_event';
-import InvoicePayment from 'models/invoice_payment';
+// import InvoicePayment from 'models/invoice_payment';
+import MembershipSubscription, {
+  isSubscribed,
+} from 'models/membership_subscription';
 import User from 'models/user';
 import slackMessage from 'services/slackMessage';
+import * as mailer from 'email/mailer';
 // const stripe = require('stripe')(process.env.STRIPE_API_SECRET);
 
 
@@ -34,107 +38,159 @@ const WEBHOOK_EVENT_TYPES = [
 ];
 
 // Update a user's subscription status
-// const syncSubscriptionStatus = async ( event ) => {
-//   const { id, status, customer } = event.data.object;
-//   const [ subscription, user ] = await Promise.all([
-//     Subscription.findOne({ stripe_subscription_id: id }),
-//     User.findOne({ stripe_customer_id: customer }),
-//   ]);
-//   subscription.status = status;
-//   user.subscribed = isSubscribed(status);
-//   await Promise.all([
-//     subscription.save(),
-//     user.save(),
-//   ]);
-// };
+async function syncSubscriptionStatus( event ) {
+  const { id, status, customer } = event.data.object;
+  // fetch the subscription
+  const subscription = await MembershipSubscription.findOne({ stripe_subscription_id: id });
+  // fetch the customer user
+  const customerUser = await User.findOne({
+    'stripe_customer_references.stripe_customer_id': customer,
+  });
 
-// Create a record of every invoice payment
-// const createInvoiceRecord = async ( event ) => {
-//   const {
-//     id, total, charge, customer,
-//   } = event.data.object;
+  // update the subscription status
+  subscription.status = status;
+  await subscription.save();
 
-//   try {
-//     const chargeObj = await stripe.charges.retrieve(charge, { expand: [ 'balance_transaction' ] });
-//     const user = await User.findOne({ stripe_customer_id: customer });
-//     const invoice = await stripe.invoices.retrieve(id);
-//     const subId = invoice.lines.data.filter(( line ) => ( line.type === 'subscription' ))[0].id;
-//     const subscription = Subscription.find({ stripe_subscription_id: subId });
-
-//     await InvoicePayment.create({
-//       _id: id,
-//       amount: total,
-//       fee_amount: chargeObj.balance_transaction.fee,
-//       user: user._id,
-//       subscription: subscription._id,
-//     });
-//   }
-//   catch ( error ) {
-//     // IGNORE EXCEPTION
-//   }
-
-// };
-
-async function syncSubscriptionStatus() {
-  // NOT_EMPTY
+  // update the user record
+  const subscribed = isSubscribed(status);
+  if ( !subscribed ) {
+    await customerUser.update({
+      $pull: { subscribed_memberships: subscription.membership },
+    });
+  }
+  if ( subscribed ) {
+    await customerUser.update({
+      $addToSet: { subscribed_memberships: subscription.membership },
+    });
+  }
 }
 
-async function removeSubscription() {
-  // NOT_EMPTY
+async function removeSubscription( event ) {
+  const { id, customer } = event.data.object;
+  // fetch the subscription
+  const subscription = await MembershipSubscription.findOne({ stripe_subscription_id: id });
+  // fetch the customer user
+  const customerUser = await User.findOne({
+    'stripe_customer_references.stripe_customer_id': customer,
+  });
+  // delete the subscription record
+  await subscription.remove();
+  // update the user record
+  await customerUser.update({
+    $pull: { subscribed_memberships: subscription.membership },
+  });
 }
 
-async function removeCustomer() {
-  // NOT_EMPTY
+async function removeCustomer( event ) {
+  const { id } = event.data.object;
+  // remove the customer reference from the user record
+  await User.update(
+    { 'stripe_customer_references.stripe_customer_id': id },
+    { $pull: { stripe_customer_references: id } },
+  );
 }
 
-async function disconnectUser() {
-  // NOT_EMPTY
+async function disconnectUser( event ) {
+  // update user record
+  const user = await User.findOne({ _id: event.account });
+  user.connected = false;
+  user.stripe_connect_token = null;
+  await user.save();
 }
 
-async function handleInvoicePaymentSuccess(  ) {
-  console.log('handleInvoicePaymentSuccess');
-  // TODO: Send email if needed
+async function handleInvoicePaymentSuccess( event ) {
+  const providerAccount =  event.account;
+  const { customer } = event.data.object;
+
+  const providerUser = await User.findOne({
+    'stripe_connect_token.stripe_user_id': providerAccount,
+  });
+  const customerUser = await User.findOne({
+    'stripe_customer_references.stripe_customer_id': customer,
+  });
+  await mailer.webhookEventJSON( providerUser.email, event );
+  await mailer.webhookEventJSON( customerUser.email, event );
 }
 
-async function handleInvoicePaymentFailed(  ) {
-  console.log('handleInvoicePaymentFailed');
-  // TODO: Send email if needed
+async function handleInvoicePaymentFailed( event ) {
+  const providerAccount =  event.account;
+  const { customer } = event.data.object;
+
+  const providerUser = await User.findOne({
+    'stripe_connect_token.stripe_user_id': providerAccount,
+  });
+  const customerUser = await User.findOne({
+    'stripe_customer_references.stripe_customer_id': customer,
+  });
+  await mailer.webhookEventJSON( providerUser.email, event );
+  await mailer.webhookEventJSON( customerUser.email, event );
 }
 
-async function handleSubscriptionCreated(  ) {
-  console.log('handleSubscriptionCreated');
-  // TODO: Send email if needed
+async function handleSubscriptionCreated( event ) {
+  const providerAccount =  event.account;
+  const { customer } = event.data.object;
+
+  const providerUser = await User.findOne({
+    'stripe_connect_token.stripe_user_id': providerAccount,
+  });
+  const customerUser = await User.findOne({
+    'stripe_customer_references.stripe_customer_id': customer,
+  });
+  await mailer.webhookEventJSON( providerUser.email, event );
+  await mailer.webhookEventJSON( customerUser.email, event );
 }
 
-async function handleSubscriptionUpdated(  ) {
-  console.log('handleSubscriptionUpdated');
-  // TODO: Send email if needed
-  syncSubscriptionStatus();
+async function handleSubscriptionUpdated( event ) {
+  await syncSubscriptionStatus( event );
 }
 
-async function handleSubscriptionDeleted(  ) {
-  console.log('handleSubscriptionDeleted');
-  removeSubscription();
+async function handleSubscriptionDeleted( event ) {
+  await removeSubscription( event );
+
+  const providerAccount =  event.account;
+  const { customer } = event.data.object;
+
+  const providerUser = await User.findOne({
+    'stripe_connect_token.stripe_user_id': providerAccount,
+  });
+  const customerUser = await User.findOne({
+    'stripe_customer_references.stripe_customer_id': customer,
+  });
+  await mailer.webhookEventJSON( providerUser.email, event );
+  await mailer.webhookEventJSON( customerUser.email, event );
 }
 
-async function handleCustomerDeleted(  ) {
-  console.log('handleCustomerDeleted');
-  removeCustomer();
+async function handleCustomerDeleted( event ) {
+  await removeCustomer( event );
 }
 
-async function handleCustomerSourceExpiring(  ) {
-  console.log('handleCustomerSourceExpiring');
-  // TODO: Send email if needed
+async function handleCustomerSourceExpiring( event ) {
+  const customerEmail = event.data.object.owner.email;
+  await mailer.webhookEventJSON( customerEmail, event );
 }
 
-async function handleUserDisconnect(  ) {
-  console.log('handleUserDisconnect');
-  disconnectUser();
+async function handleUserDisconnect( event ) {
+  await disconnectUser( event );
+  const providerAccount = event.account;
+
+  const providerUser = await User.findOne({
+    'stripe_connect_token.stripe_user_id': providerAccount,
+  });
+  await mailer.webhookEventJSON( providerUser.email, event );
 }
 
-async function handleChargeRefund(  ) {
-  console.log('handleChargeRefund');
-  // TODO: Send email if needed
+async function handleChargeRefund( event ) {
+  const providerAccount = event.account;
+  const { customer } = event.data.object;
+
+  const providerUser = await User.findOne({
+    'stripe_connect_token.stripe_user_id': providerAccount,
+  });
+  const customerUser = await User.findOne({
+    'stripe_customer_references.stripe_customer_id': customer,
+  });
+  await mailer.webhookEventJSON( providerUser.email, event );
+  await mailer.webhookEventJSON( customerUser.email, event );
 }
 
 export const stripeWebhook = handleAsyncError( async ( req, res ) => { // eslint-disable-line
@@ -155,65 +211,47 @@ export const stripeWebhook = handleAsyncError( async ( req, res ) => { // eslint
 
   // TODO: UNDO
   // Do not process the same event more than once
-  // const exists = await StripeEvent.count({ _id: event.id });
-  // if ( exists ) {
-  //   res.sendStatus(200);
-  //   return;
-  // }
+  const exists = await StripeEvent.count({ _id: event.id });
+  if ( exists ) {
+    res.sendStatus(200);
+    return;
+  }
 
   /* Process webhooks, based on type */
 
   // if event payload contains `account`, this is a connect event, so load that provider user
   if ( event.account ) {
-    const instructor = await User.findOne({
-      'stripe_connect_token.stripe_user_id': event.account,
-    });
-
     if ( event.type === 'invoice.payment_succeeded' ) {
-      await handleInvoicePaymentSuccess( instructor );
+      await handleInvoicePaymentSuccess( event );
     }
     if ( event.type === 'invoice.payment_failed' ) {
-      await handleInvoicePaymentFailed( instructor );
+      await handleInvoicePaymentFailed( event );
     }
     if ( event.type === 'customer.subscription.created' ) {
-      await handleSubscriptionCreated( instructor );
+      await handleSubscriptionCreated( event );
     }
     if ( event.type === 'customer.subscription.updated' ) {
-      await handleSubscriptionUpdated( instructor );
+      await handleSubscriptionUpdated( event );
     }
     if ( event.type === 'customer.subscription.deleted' ) {
-      await handleSubscriptionDeleted( instructor );
+      await handleSubscriptionDeleted( event );
     }
     if ( event.type === 'customer.deleted' ) {
-      await handleCustomerDeleted( instructor );
+      await handleCustomerDeleted( event );
     }
     if ( event.type === 'customer.source.expiring' ) {
-      await handleCustomerSourceExpiring( instructor );
+      await handleCustomerSourceExpiring( event );
     }
     if ( event.type === 'account.application.deauthorized' ) {
-      await handleUserDisconnect( instructor );
+      await handleUserDisconnect( event );
     }
     if ( event.type === 'charge.refunded' ) {
-      await handleChargeRefund( instructor );
+      await handleChargeRefund( event );
     }
   }
 
-  // Update subscription status whenever it changes
-  // console.log('Processing: ' + event.type); // eslint-disable-line
-  // if (
-  //   event.type === 'customer.subscription.created' ||
-  //   event.type === 'customer.subscription.updated' ||
-  //   event.type === 'customer.subscription.deleted'
-  // ) {
-  //   await syncSubscriptionStatus(event);
-  // }
-  // // Record successful invoice payments, for basic payment reporting
-  // if ( event.type === 'invoice.payment_succeeded' ) {
-  //   createInvoiceRecord(event);
-  // }
-
   // Create the resource after operations are successful ( TODO: UNDO )
-  // await StripeEvent.create({ _id: event.id });
+  await StripeEvent.create({ _id: event.id });
 
   // Always return 200 success response
   res.sendStatus(200);

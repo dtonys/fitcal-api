@@ -5,6 +5,14 @@ export const STRIPE_WEBHOOK_ENDPOINT = '/api/stripe/webhook';
 export const STRIPE_CONNECT_WEBHOOK_ENDPOINT = '/api/stripe/connect/webhook';
 
 export function verifyStripeSignature( req, res, next ) { // eslint-disable-line
+
+  const bypassVerification = false;
+  if ( bypassVerification ) {
+    req.stripeWebhookEvent = req.body;
+    next();
+    return;
+  }
+
   const sig = req.headers[ 'stripe-signature' ];
   try {
     const event = stripe.webhooks.constructEvent(req.rawBody, sig, req.stripeWebhookSecret );
