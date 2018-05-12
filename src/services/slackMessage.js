@@ -5,9 +5,10 @@ const slack = new Slack();
 slack.setWebhook(process.env.SLACK_WEBHOOK_URL);
 
 export default ( text, username = 'web-server-events' ) => {
-  slack.webhook({
-    channel: `#${process.env.SLACK_WEBHOOK_CHANNEL}`,
-    username,
-    text,
-  }, () => {});
+  // NOTE: Deprecated for now
+  // slack.webhook({
+  //   channel: `#${process.env.SLACK_WEBHOOK_CHANNEL}`,
+  //   username,
+  //   text,
+  // }, () => {});
 };

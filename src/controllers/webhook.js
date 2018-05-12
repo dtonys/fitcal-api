@@ -201,7 +201,7 @@ export const stripeWebhook = handleAsyncError( async ( req, res ) => { // eslint
   if ( process.env.NODE_ENV === 'production' && !event.livemode ) return;
 
   // relay webhook event to slack
-  slackMessage( `${event.type} - https://dashboard.stripe.com/test/events/${event.id}`);
+  // slackMessage( `${event.type} - https://dashboard.stripe.com/test/events/${event.id}`);
 
   // return 200 and do nothing further, if webhook event is not a type we care about
   if ( !WEBHOOK_EVENT_TYPES.includes( event.type ) ) {
